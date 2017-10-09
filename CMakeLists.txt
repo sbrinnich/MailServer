@@ -3,7 +3,7 @@ project(mailserver)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES_CLIENT main.cpp)
+set(SOURCE_FILES_CLIENT client/client_main.cpp)
 add_executable(client ${SOURCE_FILES_CLIENT})
 
 set(SOURCE_FILES_SERVER server/server_main.cpp)
