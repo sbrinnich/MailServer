@@ -10,22 +10,24 @@
 #include "operations/operation_del.h"
 
 Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
-    if(strcasecmp(buffer, "SEND") == 0){
+    if(strcasecmp(buffer, "SEND\n") == 0){//WO WAR DER BACKSLASH????????????????????????????
         return new OperationSend(clientsocket);
-    }else if(strcasecmp(buffer, "LIST") == 0){
+    }else if(strcasecmp(buffer, "LIST\n") == 0){
         return new OperationList(clientsocket);
-    }else if(strcasecmp(buffer, "READ") == 0){
+    }else if(strcasecmp(buffer, "READ\n") == 0){
         return new OperationRead(clientsocket);
-    }else if(strcasecmp(buffer, "DEL") == 0){
+    }else if(strcasecmp(buffer, "DEL\n") == 0){
         return new OperationDel(clientsocket);
     }
-    return nullptr;
+    return nullptr; //ist das sicher eine gute idee?
 }
 
 void ClientHandler::handleClient(int clientsocket) {
     // Get Operation from first input line of client
     char buffer[MAXLINE];
+    std::fill(buffer, buffer + sizeof(buffer), 0);//vorher war irgendwas da drin...und das ist nie schön...
     ssize_t size = readline(clientsocket, buffer, MAXLINE);
+
     if(size <= 0) {
         // Could not read line, display error
         strcpy(buffer,"ERR\n");
@@ -36,13 +38,29 @@ void ClientHandler::handleClient(int clientsocket) {
     Operation *op = getOperation(buffer, clientsocket);
 
     // Let operation parse the rest of client input
-    int parse = op->parseRequest();
+    if(op != nullptr){
+        int parse = op->parseRequest();
+        if(parse != 0){
+            // Operation could not parse input of client, display error
+            perror("Could not parse client input.\n");
+            strcpy(buffer,"ERR\n");
+            send(clientsocket, buffer, strlen(buffer), 0);
+            return;
+        }
+    }else{
+        //printf("I ate bugs and you input weird stuff\n"); best typo
+        perror("Invalid Input.\n");
+        return;
+
+    }
+    /*  int parse = op->parseRequest(); // da ist der segv gewesen wegen dem nullptr den das zurück gibt...
+
     if(parse != 0){
         // Operation could not parse input of client, display error
         strcpy(buffer,"ERR\n");
         send(clientsocket, buffer, strlen(buffer), 0);
         return;
-    }
+    }*/
 
     // Let operation do something
     int done = op->doOperation();

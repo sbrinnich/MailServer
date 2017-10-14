@@ -31,6 +31,13 @@ int main (void) {
         perror("bind error");
         return EXIT_FAILURE;
     }
+
+#ifdef SO_REUSEPORT
+    int reuse = 1;
+    if (setsockopt(create_socket, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0)
+        perror("setsockopt(SO_REUSEPORT) failed");
+#endif
+
     listen (create_socket, 5);
 
     addrlen = sizeof (struct sockaddr_in);
