@@ -29,9 +29,7 @@ void ClientHandler::handleClient(int clientsocket) {
         send(clientsocket, "What do you want to do?\n", strlen("What do you want to do?\n"), 0);
         // Get Operation from first input line of client
         std::fill(buffer, buffer + sizeof(buffer), 0);
-        perror("Testy");
         ssize_t size = readline(clientsocket, buffer, MAXLINE);
-        perror("Testy2");
 
         if(strcasecmp(buffer, "QUIT\n") == 0) {
             // Close connection to client
