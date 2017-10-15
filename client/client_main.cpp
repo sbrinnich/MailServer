@@ -59,7 +59,12 @@ int main (int argc, char **argv) {
     }
 
     do {
-        printf ("Send message: ");
+        size=recv(create_socket,buffer,BUF-1, 0);
+        if (size>0)
+        {
+            buffer[size]= '\0';
+            printf("%s",buffer);
+        }
         fgets (buffer, BUF, stdin);
         send(create_socket, buffer, strlen (buffer), 0);
     }
