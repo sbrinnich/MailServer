@@ -16,7 +16,7 @@ private:
 
 public:
     OperationSend(int clientsocket);
-    char * getClientInput(int buffersize);
+    int getClientInput(int buffersize, std::string key);
     ~OperationSend();
     int parseRequest() override;
     int doOperation() override;
