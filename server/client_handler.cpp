@@ -9,6 +9,8 @@
 #include "operations/operation_read.h"
 #include "operations/operation_del.h"
 
+ClientHandler::ClientHandler(char *mailspooldir) : mailspooldir(mailspooldir) {}
+
 Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
     if(strcasecmp(buffer, "SEND\n") == 0){
         return new OperationSend(clientsocket);

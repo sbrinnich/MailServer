@@ -6,8 +6,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sstream>
+
 #define BUF 1024
-#define PORT 6543
 
 int main (int argc, char **argv) {
     int create_socket;
@@ -15,9 +16,19 @@ int main (int argc, char **argv) {
     struct sockaddr_in address;
     int size;
 
-    if( argc < 2 ){
-        printf("Usage: %s ServerAdresse\n", argv[0]);
-        exit(EXIT_FAILURE);
+    if( argc != 3 ){
+        printf("Invalid parameters specified!\n");
+        printf("Usage: %s [server_address] [port]\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    int port;
+    std::stringstream s(argv[2]);
+    s >> port;
+    if(s.fail() || port <= 0){
+        printf("Invalid parameters specified! Not a valid port number!\n");
+        printf("Usage: %s [server_address] [port]\n", argv[0]);
+        return EXIT_FAILURE;
     }
 
     if ((create_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
@@ -28,7 +39,7 @@ int main (int argc, char **argv) {
 
     memset(&address,0,sizeof(address));
     address.sin_family = AF_INET;
-    address.sin_port = htons (PORT);
+    address.sin_port = htons (port);
     inet_aton (argv[1], &address.sin_addr);
 
     if (connect ( create_socket, (struct sockaddr *) &address, sizeof (address)) == 0)

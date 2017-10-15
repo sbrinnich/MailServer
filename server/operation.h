@@ -9,8 +9,9 @@ class Operation {
 protected:
     char buffer[MAXLINE];
     int clientsocket;
+    char* mailspooldir;
 public:
-    Operation(int clientsocket);
+    Operation(int clientsocket, char* mailspooldir);
     /**
      * Parses the client's input from the class' clientsocket
      * @return 0 if syntax of client was correct and request could be parsed or

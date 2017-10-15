@@ -6,6 +6,10 @@
 class ClientHandler {
 private:
     /**
+     * Char pointer containing the directory path to the mailspool
+     */
+    char* mailspooldir;
+    /**
      * Searches for the correct implementation of the operation for the command in buffer
      * @param buffer a char* containing a command
      * @param clientsocket a socket from the client sending the command
@@ -20,6 +24,11 @@ private:
      */
     void handleClientRequest(int clientsocket, char* request_msg);
 public:
+    /**
+     * Creates an instance of a client handler class
+     * @param mailspooldir a path to the mails pool directory
+     */
+    ClientHandler(char* mailspooldir);
     /**
      * Handles a client's requests
      * @param clientsocket the socket from the client
