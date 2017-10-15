@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "socket_read.h"
 
 static ssize_t my_read (int fd, char *ptr) {
