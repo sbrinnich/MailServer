@@ -12,9 +12,16 @@ private:
      * @return a new instance of the found operation or nullptr, if no fitting operation could be found
      */
     Operation* getOperation(char* buffer, int clientsocket);
+
+    /**
+     * Handles a request of a client
+     * @param clientsocket the socket from the client
+     * @param request_msg the message that the client entered to start an operation
+     */
+    void handleClientRequest(int clientsocket, char* request_msg);
 public:
     /**
-     * Handles a client's request
+     * Handles a client's requests
      * @param clientsocket the socket from the client
      */
     void handleClient(int clientsocket);
