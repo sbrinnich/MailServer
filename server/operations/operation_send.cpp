@@ -1,6 +1,6 @@
 #include "operation_send.h"
 
-OperationSend::OperationSend(int clientsocket) : Operation(clientsocket) {
+OperationSend::OperationSend(int clientsocket) : Operation(clientsocket, mailspooldir) {
 
 }
 

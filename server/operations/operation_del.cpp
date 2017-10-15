@@ -1,6 +1,6 @@
 #include "operation_del.h"
 
-OperationDel::OperationDel(int clientsocket) : Operation(clientsocket) {
+OperationDel::OperationDel(int clientsocket) : Operation(clientsocket, mailspooldir) {
 }
 
 int OperationDel::parseRequest() {

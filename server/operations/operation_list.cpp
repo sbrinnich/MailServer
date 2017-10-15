@@ -1,6 +1,6 @@
 #include "operation_list.h"
 
-OperationList::OperationList(int clientsocket) : Operation(clientsocket) {
+OperationList::OperationList(int clientsocket) : Operation(clientsocket, mailspooldir) {
 }
 
 int OperationList::parseRequest() {
