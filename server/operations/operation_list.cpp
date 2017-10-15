@@ -8,6 +8,6 @@ int OperationList::parseRequest() {
 }
 
 int OperationList::doOperation() {
-    printf("Doing List");
+    printf("Doing List\n");
     return 0;
 }

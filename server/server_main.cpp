@@ -54,28 +54,6 @@ int main (void) {
             send(new_socket, buffer, strlen(buffer),0);
             clientHandler->handleClient(new_socket);
         }
-        /*
-        do {
-            // Handle client requests
-            size = recv (new_socket, buffer, BUF-1, 0);
-            if( size > 0)
-            {
-                buffer[size] = '\0';
-                printf ("Message received: %s\n", buffer);
-            }
-            else if (size == 0)
-            {
-                printf("Client closed remote socket\n");
-                break;
-            }
-            else
-            {
-                perror("recv error");
-                return EXIT_FAILURE;
-            }
-        } while (strncmp (buffer, "quit", 4)  != 0);*/
-        // Close socket of client
-        close (new_socket);
     }
     // Close server socket
     close (create_socket);

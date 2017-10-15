@@ -8,6 +8,6 @@ int OperationRead::parseRequest() {
 }
 
 int OperationRead::doOperation() {
-    printf("Doing Read");
+    printf("Doing Read\n");
     return 0;
 }

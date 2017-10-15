@@ -8,6 +8,6 @@ int OperationDel::parseRequest() {
 }
 
 int OperationDel::doOperation() {
-    printf("Doing Del");
+    printf("Doing Del\n");
     return 0;
 }

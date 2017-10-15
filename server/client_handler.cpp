@@ -10,7 +10,7 @@
 #include "operations/operation_del.h"
 
 Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
-    if(strcasecmp(buffer, "SEND\n") == 0){//WO WAR DER BACKSLASH????????????????????????????
+    if(strcasecmp(buffer, "SEND\n") == 0){
         return new OperationSend(clientsocket);
     }else if(strcasecmp(buffer, "LIST\n") == 0){
         return new OperationList(clientsocket);
@@ -19,48 +19,49 @@ Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
     }else if(strcasecmp(buffer, "DEL\n") == 0){
         return new OperationDel(clientsocket);
     }
-    return nullptr; //ist das sicher eine gute idee?
+    return nullptr;
 }
 
 void ClientHandler::handleClient(int clientsocket) {
-    // Get Operation from first input line of client
     char buffer[MAXLINE];
-    std::fill(buffer, buffer + sizeof(buffer), 0);//vorher war irgendwas da drin...und das ist nie schön...
-    ssize_t size = readline(clientsocket, buffer, MAXLINE);
+    while(1) {
+        // Get Operation from first input line of client
+        std::fill(buffer, buffer + sizeof(buffer), 0);
+        ssize_t size = readline(clientsocket, buffer, MAXLINE);
 
-    if(size <= 0) {
-        // Could not read line, display error
-        strcpy(buffer,"ERR\n");
-        send(clientsocket, buffer, strlen(buffer), 0);
-        return;
+        if(strcasecmp(buffer, "QUIT\n") == 0) {
+            // Close connection to client
+            printf("Client closed connection\n");
+            close (clientsocket);
+            return;
+        }else if (size <= 0) {
+            // Could not read line, display error
+            strcpy(buffer, "ERR\n");
+            send(clientsocket, buffer, strlen(buffer), 0);
+        }else{
+            handleClientRequest(clientsocket, buffer);
+        }
     }
+}
 
-    Operation *op = getOperation(buffer, clientsocket);
+void ClientHandler::handleClientRequest(int clientsocket, char* request_msg) {
+    char buffer[MAXLINE];
+    std::fill(buffer, buffer + sizeof(buffer), 0);
+
+    Operation *op = getOperation(request_msg, clientsocket);
 
     // Let operation parse the rest of client input
-    if(op != nullptr){
-        int parse = op->parseRequest();
-        if(parse != 0){
-            // Operation could not parse input of client, display error
-            perror("Could not parse client input.\n");
-            strcpy(buffer,"ERR\n");
-            send(clientsocket, buffer, strlen(buffer), 0);
-            return;
-        }
-    }else{
-        //printf("I ate bugs and you input weird stuff\n"); best typo
-        perror("Invalid Input.\n");
+    if(op == nullptr) {
         return;
-
     }
-    /*  int parse = op->parseRequest(); // da ist der segv gewesen wegen dem nullptr den das zurück gibt...
-
+    int parse = op->parseRequest();
     if(parse != 0){
         // Operation could not parse input of client, display error
+        perror("Could not parse client input.\n");
         strcpy(buffer,"ERR\n");
         send(clientsocket, buffer, strlen(buffer), 0);
         return;
-    }*/
+    }
 
     // Let operation do something
     int done = op->doOperation();
