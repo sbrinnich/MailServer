@@ -1,10 +1,6 @@
-#include <iostream>
-#include <fstream>
 #include <sys/time.h>
-#include <dirent.h>
 
 #include "operation_send.h"
-#include "../socket_read.h"
 
 OperationSend::OperationSend(int clientsocket, char* mailspooldir) : Operation(clientsocket, mailspooldir) {
     sender = new char[9];
@@ -41,6 +37,14 @@ int OperationSend::parseRequest() {
 
 int OperationSend::doOperation() {
 
+    // Check if all parameters are set
+    if(sender == NULL || strcmp(sender, "") == 0 ||
+            receiver == NULL || strcmp(receiver, "") == 0 ||
+            subject == NULL || strcmp(subject, "") == 0 ||
+            content == NULL || strcmp(content, "") == 0){
+        return 1;
+    }
+
     // Create filename
     struct timeval tp;
     gettimeofday(&tp, NULL);
@@ -73,27 +77,9 @@ int OperationSend::doOperation() {
     return 0;
 }
 
-int OperationSend::getClientInput(int buffersize, char* *ptr){
-    char buffer[buffersize];
-    std::fill(buffer, buffer + sizeof(buffer), 0);
-    // Receive text from client, write to buffer
-    ssize_t size = recv(clientsocket, buffer, MAXLINE-1, 0);
-
-    if(size > buffersize){
-        send(clientsocket, "ERR\n", strlen("ERR\n"), 0);
-        return 1;
-    }
-
-    // Append null-terminator to buffer
-    if(size >= buffersize) {
-        buffer[buffersize-1] = '\0';
-    }else if(buffer[size-1] == '\n'){
-        buffer[size-1] = '\0';
-    }else{
-        buffer[size] = '\0';
-    }
-
-    // Copy text in buffer to ptr
-    strcpy(*ptr, buffer);
-    return 0;
+OperationSend::~OperationSend() {
+    delete[] sender;
+    delete[] receiver;
+    delete[] subject;
+    delete[] content;
 }

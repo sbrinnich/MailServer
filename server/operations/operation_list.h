@@ -4,6 +4,9 @@
 #include "../operation.h"
 
 class OperationList : public Operation {
+private:
+    char *username;
+
 public:
     OperationList(int clientsocket, char* mailspooldir);
     ~OperationList();
