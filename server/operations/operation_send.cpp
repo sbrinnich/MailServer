@@ -64,8 +64,8 @@ int OperationSend::doOperation() {
     // Open file and write data into it
     std::ofstream file;
     file.open(dirpath.str().c_str(), std::ios::out);
-    file << "Sender: " << sender;
-    file << "Subject: " << subject;
+    file << "Sender: " << sender << '\n';
+    file << "Subject: " << subject << '\n';
     file << "Content: " << content;
 
     file.close();
