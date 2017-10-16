@@ -2,6 +2,7 @@
 #define MAILSERVER_OPERATION_H
 
 #include <iostream>
+#include <sstream>
 
 
 #define MAXLINE 1024

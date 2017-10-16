@@ -1,10 +1,12 @@
 #include <cstdio>
+#include <bits/stl_algobase.h>
 #include "socket_read.h"
 
 static ssize_t my_read (int fd, char *ptr) {
     static int   read_cnt = 0 ;
-    static char  *read_ptr ;
+    static char  *read_ptr = nullptr;
     static char  read_buf[MAXLINE] ;
+    std::fill(read_buf, read_buf + sizeof(read_buf), 0);
     if (read_cnt <= 0) {
         again:
         if ( (read_cnt = read(fd,read_buf,sizeof(read_buf))) < 0) {
@@ -29,7 +31,7 @@ static ssize_t my_read (int fd, char *ptr) {
  */
 ssize_t readline (int fd, char *vptr, size_t maxlen) {
     ssize_t   n, rc ;
-    char      c, *ptr ;
+    char      c = '\0', *ptr ;
     ptr = vptr ;
     for (n = 1 ; n < maxlen ; n++) {
         if ( (rc = my_read(fd,&c)) == 1 ) {

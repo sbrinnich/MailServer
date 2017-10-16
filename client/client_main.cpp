@@ -13,6 +13,7 @@
 int main (int argc, char **argv) {
     int create_socket;
     char buffer[BUF];
+    std::fill(buffer, buffer + sizeof(buffer), 0);
     struct sockaddr_in address;
     int size;
 
@@ -45,12 +46,7 @@ int main (int argc, char **argv) {
     if (connect ( create_socket, (struct sockaddr *) &address, sizeof (address)) == 0)
     {
         printf ("Connection with server (%s) established\n", inet_ntoa (address.sin_addr));
-        size=recv(create_socket,buffer,BUF-1, 0);
-        if (size>0)
-        {
-            buffer[size]= '\0';
-            printf("%s",buffer);
-        }
+        std::fill(buffer, buffer + sizeof(buffer), 0);
     }
     else
     {
@@ -59,14 +55,18 @@ int main (int argc, char **argv) {
     }
 
     do {
+        std::fill(buffer, buffer + sizeof(buffer), 0);
         size=recv(create_socket,buffer,BUF-1, 0);
         if (size>0)
         {
             buffer[size]= '\0';
             printf("%s",buffer);
         }
-        fgets (buffer, BUF, stdin);
-        send(create_socket, buffer, strlen (buffer), 0);
+        std::fill(buffer, buffer + sizeof(buffer), 0);
+        char buff[BUF];
+        std::fill(buff, buff + sizeof(buff), 0);
+        std::fgets (buff, BUF, stdin);
+        send(create_socket, buff, strlen(buff), 0);
     }
     while (strcmp (buffer, "quit\n") != 0);
     printf ("Connection to server closed\n");

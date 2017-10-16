@@ -1,6 +1,7 @@
 #include <strings.h>
 #include <cstring>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include "client_handler.h"
 #include "operations/operation_send.h"
@@ -26,22 +27,27 @@ Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
 void ClientHandler::handleClient(int clientsocket) {
     char buffer[MAXLINE];
     while(1) {
-        send(clientsocket, "What do you want to do?\n", strlen("What do you want to do?\n"), 0);
+        send(clientsocket, "Welcome to mailserver!\nWhat do you want to do?\n",
+             strlen("Welcome to mailserver!\nWhat do you want to do?\n"), 0);
         // Get Operation from first input line of client
         std::fill(buffer, buffer + sizeof(buffer), 0);
-        ssize_t size = readline(clientsocket, buffer, MAXLINE);
+        ssize_t size = recv(clientsocket, buffer, MAXLINE-1, 0);
 
-        if(strcasecmp(buffer, "QUIT\n") == 0) {
-            // Close connection to client
-            printf("Client closed connection\n");
-            close (clientsocket);
-            return;
-        }else if (size <= 0) {
+        if(size <= 0) {
             // Could not read line, display error
             strcpy(buffer, "ERR\n");
             send(clientsocket, buffer, strlen(buffer), 0);
-        }else{
-            handleClientRequest(clientsocket, buffer);
+        }else {
+            buffer[size] = '\0';
+
+            if (strcasecmp(buffer, "QUIT\n") == 0) {
+                // Close connection to client
+                printf("Client closed connection\n");
+                close(clientsocket);
+                return;
+            } else {
+                handleClientRequest(clientsocket, buffer);
+            }
         }
     }
 }

@@ -78,8 +78,6 @@ int main (int argc, char** argv) {
         {
             // New client connected, send welcome message
             printf ("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
-            strcpy(buffer,"Welcome to mailserver!\n");
-            send(new_socket, buffer, strlen(buffer),0);
             clientHandler->handleClient(new_socket);
         }
     }
