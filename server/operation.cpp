@@ -67,3 +67,21 @@ int Operation::parseMailFile(const char *filename, char **sender, char **subject
     }
     return 1;
 }
+
+char* Operation::getNthMailFilename(const char *filepath, int n) {
+    DIR* dir = opendir(filepath);
+    if(!dir) {
+        return nullptr;
+    }
+    struct dirent *ent;
+    int count = 0;
+    while ((ent = readdir(dir)) != NULL) {
+        if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
+            count++;
+            if(count == n){
+                return ent->d_name;
+            }
+        }
+    }
+    return nullptr;
+}

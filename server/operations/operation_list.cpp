@@ -6,7 +6,7 @@ OperationList::OperationList(int clientsocket, char* mailspooldir) : Operation(c
 
 int OperationList::parseRequest() {
     send(clientsocket, "You chose to list your emails. Please enter the following data.\nUsername: ",
-         strlen("You choose to list your emails. Please enter the following data.\nUsername: "), 0);
+         strlen("You chose to list your emails. Please enter the following data.\nUsername: "), 0);
     return getClientInput(9, &username);
 }
 
@@ -39,7 +39,7 @@ int OperationList::doOperation() {
                 parsing = parseMailFile(filepath.str().c_str(), &sender, &subject, &content);
                 if (parsing == 0) {
                     mailcount++;
-                    mailsubjects << subject << std::endl;
+                    mailsubjects << "#" << mailcount << ": " << subject << std::endl;
                 } else {
                     perror("MailFile Parse Error in LIST");
                 }

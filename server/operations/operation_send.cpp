@@ -12,7 +12,8 @@ OperationSend::OperationSend(int clientsocket, char* mailspooldir) : Operation(c
 int OperationSend::parseRequest() {
 
     int ret = 0;
-    send(clientsocket, "You chose to send an email. Please enter the following data.\nSender: ", strlen("You choose to send an email. Please enter the following data.\nSender: "), 0);
+    send(clientsocket, "You chose to send an email. Please enter the following data.\nSender: ",
+         strlen("You chose to send an email. Please enter the following data.\nSender: "), 0);
     ret = getClientInput(9, &sender);
     if(ret == 1){
         return 1;

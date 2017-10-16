@@ -45,6 +45,15 @@ protected:
      */
     int parseMailFile(const char* filename, char* *sender, char* *subject, char* *content);
 
+    /**
+     * Gets the filename of the nth read file in given directory
+     * @param filepath the path to the directory where the nth file should be searched
+     * @param n the number of the file
+     * @return a char* containing the filename of the found file (without path) or
+     *          nullptr, if no such file could be found
+     */
+    char* getNthMailFilename(const char* filepath, int n);
+
 public:
     Operation(int clientsocket, char* mailspooldir);
     /**

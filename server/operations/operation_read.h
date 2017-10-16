@@ -4,6 +4,10 @@
 #include "../operation.h"
 
 class OperationRead : public Operation {
+private:
+    char *username;
+    int messagenr;
+
 public:
     OperationRead(int clientsocket, char* mailspooldir);
     ~OperationRead();
