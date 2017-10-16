@@ -64,9 +64,9 @@ int OperationSend::doOperation() {
     // Open file and write data into it
     std::ofstream file;
     file.open(dirpath.str().c_str(), std::ios::out);
-    file << "Sender: " << sender;
-    file << "Subject: " << subject;
-    file << "Content: " << content;
+    file << "Sender: " << sender << std::endl;
+    file << "Subject: " << subject << std::endl;
+    file << "Content: " << content << std::endl;
 
     file.close();
 
@@ -76,16 +76,24 @@ int OperationSend::doOperation() {
 int OperationSend::getClientInput(int buffersize, char* *ptr){
     char buffer[buffersize];
     std::fill(buffer, buffer + sizeof(buffer), 0);
+    // Receive text from client, write to buffer
     ssize_t size = recv(clientsocket, buffer, MAXLINE-1, 0);
+
     if(size > buffersize){
         send(clientsocket, "ERR\n", strlen("ERR\n"), 0);
         return 1;
     }
+
+    // Append null-terminator to buffer
     if(size >= buffersize) {
         buffer[buffersize-1] = '\0';
+    }else if(buffer[size-1] == '\n'){
+        buffer[size-1] = '\0';
     }else{
         buffer[size] = '\0';
     }
+
+    // Copy text in buffer to ptr
     strcpy(*ptr, buffer);
     return 0;
 }
