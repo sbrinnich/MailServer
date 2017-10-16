@@ -4,6 +4,11 @@
 #include "../operation.h"
 
 class OperationDel : public Operation {
+
+private:
+    char * username;
+    int messagenr;
+
 public:
     OperationDel(int clientsocket, char* mailspooldir);
     ~OperationDel();

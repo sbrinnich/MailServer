@@ -66,10 +66,11 @@ int main (int argc, char **argv) {
         char buff[BUF];
         std::fill(buff, buff + sizeof(buff), 0);
         std::fgets (buff, BUF, stdin);
+        strcpy(buffer,buff);
         send(create_socket, buff, strlen(buff), 0);
     }
     while (strcmp (buffer, "quit\n") != 0);
-    printf ("Connection to server closed\n");
+    printf ("Connection to server closed.\n");
     close (create_socket);
     return EXIT_SUCCESS;
 }

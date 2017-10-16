@@ -26,6 +26,13 @@ protected:
 
 
     /**
+     * tests if directory exists for username
+     * @return 0 if true
+     */
+
+    //int testDirectory();
+
+    /**
      * Reads from the client socket and writes read text into ptr.
      * @param maxsize the maximum number of characters to be received
      * @param ptr a pointer to a char* where the read text should be copied to

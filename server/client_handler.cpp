@@ -42,7 +42,7 @@ void ClientHandler::handleClient(int clientsocket) {
 
             if (strcasecmp(buffer, "QUIT\n") == 0) {
                 // Close connection to client
-                printf("Client closed connection\n");
+                printf("Client closed connection.\n");
                 close(clientsocket);
                 return;
             } else {
