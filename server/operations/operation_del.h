@@ -5,7 +5,7 @@
 
 class OperationDel : public Operation {
 public:
-    OperationDel(int clientsocket);
+    OperationDel(int clientsocket, char* mailspooldir);
     ~OperationDel();
     int parseRequest() override;
     int doOperation() override;

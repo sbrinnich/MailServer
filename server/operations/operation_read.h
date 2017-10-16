@@ -5,7 +5,7 @@
 
 class OperationRead : public Operation {
 public:
-    OperationRead(int clientsocket);
+    OperationRead(int clientsocket, char* mailspooldir);
     ~OperationRead();
     int parseRequest() override;
     int doOperation() override;

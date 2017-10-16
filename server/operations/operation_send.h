@@ -12,11 +12,11 @@ class OperationSend : public Operation {
 
 
 private:
-    std::map <std::string, char *> Data;
+    std::map <int, char *> Data;
 
 public:
-    OperationSend(int clientsocket);
-    int getClientInput(int buffersize, std::string key);
+    OperationSend(int clientsocket, char* mailspooldir);
+    int getClientInput(int buffersize, int key);
     ~OperationSend();
     int parseRequest() override;
     int doOperation() override;

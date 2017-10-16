@@ -5,7 +5,7 @@
 
 class OperationList : public Operation {
 public:
-    OperationList(int clientsocket);
+    OperationList(int clientsocket, char* mailspooldir);
     ~OperationList();
     int parseRequest() override;
     int doOperation() override;

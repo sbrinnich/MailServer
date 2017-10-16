@@ -13,13 +13,13 @@ ClientHandler::ClientHandler(char *mailspooldir) : mailspooldir(mailspooldir) {}
 
 Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
     if(strcasecmp(buffer, "SEND\n") == 0){
-        return new OperationSend(clientsocket);
+        return new OperationSend(clientsocket, mailspooldir);
     }else if(strcasecmp(buffer, "LIST\n") == 0){
-        return new OperationList(clientsocket);
+        return new OperationList(clientsocket, mailspooldir);
     }else if(strcasecmp(buffer, "READ\n") == 0){
-        return new OperationRead(clientsocket);
+        return new OperationRead(clientsocket, mailspooldir);
     }else if(strcasecmp(buffer, "DEL\n") == 0){
-        return new OperationDel(clientsocket);
+        return new OperationDel(clientsocket, mailspooldir);
     }
     return nullptr;
 }

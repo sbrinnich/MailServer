@@ -2,6 +2,7 @@
 #define MAILSERVER_OPERATION_H
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 
 
@@ -12,6 +13,12 @@ protected:
     char buffer[MAXLINE];
     int clientsocket;
     char* mailspooldir;
+
+    const int SENDER = 0;
+    const int RECEIVER = 1;
+    const int SUBJECT = 2;
+    const int CONTENT = 3;
+
 public:
     Operation(int clientsocket, char* mailspooldir);
     /**

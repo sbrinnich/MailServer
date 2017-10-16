@@ -1,6 +1,6 @@
 #include "operation_read.h"
 
-OperationRead::OperationRead(int clientsocket) : Operation(clientsocket, mailspooldir) {
+OperationRead::OperationRead(int clientsocket, char* mailspooldir) : Operation(clientsocket, mailspooldir) {
 }
 
 int OperationRead::parseRequest() {
