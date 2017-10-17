@@ -1,6 +1,7 @@
 #include "operation_del.h"
 
 OperationDel::OperationDel(int clientsocket, char* mailspooldir) : Operation(clientsocket, mailspooldir) {
+    username = new char[9];
 }
 
 int OperationDel::parseRequest() {
@@ -55,4 +56,8 @@ int OperationDel::doOperation() {
         perror( "Error deleting file: No such file or directory.\n" );
         return 1;
     }
+}
+
+OperationDel::~OperationDel() {
+    delete[] username;
 }
