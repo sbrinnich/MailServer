@@ -26,9 +26,23 @@ Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
 
 void ClientHandler::handleClient(int clientsocket) {
     char buffer[MAXLINE];
+    int status = -1;
+    char msg[MAXLINE];
     while(1) {
-        send(clientsocket, "Welcome to mailserver!\nWhat do you want to do?\n",
-             strlen("Welcome to mailserver!\nWhat do you want to do?\n"), 0);
+        // Display message to client
+        switch(status){
+            case 0:
+                strcpy(msg, "OK\n\nWhat do you want to do?\n");
+                break;
+            case 1:
+                strcpy(msg, "ERR\n\nWhat do you want to do?\n");
+                break;
+            default:
+                strcpy(msg, "What do you want to do?\n");
+                break;
+        }
+        send(clientsocket, msg, strlen(msg), 0);
+
         // Get Operation from first input line of client
         std::fill(buffer, buffer + sizeof(buffer), 0);
         ssize_t size = recv(clientsocket, buffer, MAXLINE-1, 0);
@@ -46,44 +60,40 @@ void ClientHandler::handleClient(int clientsocket) {
                 close(clientsocket);
                 return;
             } else {
-                handleClientRequest(clientsocket, buffer);
+                status = handleClientRequest(clientsocket, buffer);
             }
         }
     }
 }
 
-void ClientHandler::handleClientRequest(int clientsocket, char* request_msg) {
+int ClientHandler::handleClientRequest(int clientsocket, char* request_msg) {
     char buffer[MAXLINE];
     std::fill(buffer, buffer + sizeof(buffer), 0);
 
     Operation *op = getOperation(request_msg, clientsocket);
 
-    // Let operation parse the rest of client input
     if(op == nullptr) {
-        return;
+        return 1;
     }
+
+    // Let operation parse the rest of client input
     int parse = op->parseRequest();
     if(parse != 0){
-        // Operation could not parse input of client, display error
+        // Operation could not parse input of client
         perror("Could not parse client input.\n");
-        strcpy(buffer,"ERR\n");
-        send(clientsocket, buffer, strlen(buffer), 0);
-        return;
+        return 1;
     }
 
     // Let operation do something
     int done = op->doOperation();
     if(done != 0){
-        // Operation could not do something, display error
-        strcpy(buffer,"ERR\n");
-        send(clientsocket, buffer, strlen(buffer), 0);
-        return;
+        // Operation could not do something
+        return 1;
     }
-
-    // Everything done, display OK message
-    strcpy(buffer,"OK\n");
-    send(clientsocket, buffer, strlen(buffer), 0);
 
     // Delete operation
     delete op;
+
+    // Everything done
+    return 0;
 }

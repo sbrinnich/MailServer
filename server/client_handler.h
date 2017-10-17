@@ -21,8 +21,10 @@ private:
      * Handles a request of a client
      * @param clientsocket the socket from the client
      * @param request_msg the message that the client entered to start an operation
+     * @return 0 if client request was handled successfully or
+     *          1 if something went wrong
      */
-    void handleClientRequest(int clientsocket, char* request_msg);
+    int handleClientRequest(int clientsocket, char* request_msg);
 public:
     /**
      * Creates an instance of a client handler class
