@@ -41,8 +41,6 @@ int main (int argc, char** argv) {
 
     int create_socket, new_socket;
     socklen_t addrlen;
-    char buffer[BUF];
-    int size;
     struct sockaddr_in address, cliaddress;
 
     ClientHandler* clientHandler = new ClientHandler(directory);

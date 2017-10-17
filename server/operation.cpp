@@ -110,3 +110,5 @@ char* Operation::getNthMailFilename(const char *filepath, int n) {
     }
     return nullptr;
 }
+
+Operation::~Operation() {}

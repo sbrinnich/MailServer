@@ -2,6 +2,10 @@
 #define MAILSERVER_CLIENT_HANDLER_H
 
 #include "operation.h"
+#include "operations/operation_send.h"
+#include "operations/operation_list.h"
+#include "operations/operation_read.h"
+#include "operations/operation_del.h"
 
 class ClientHandler {
 private:

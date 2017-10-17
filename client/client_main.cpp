@@ -65,9 +65,11 @@ int main (int argc, char **argv) {
         std::fill(buffer, buffer + sizeof(buffer), 0);
         char buff[BUF];
         std::fill(buff, buff + sizeof(buff), 0);
-        std::fgets (buff, BUF, stdin);
-        strcpy(buffer,buff);
-        send(create_socket, buff, strlen(buff), 0);
+        char* fgetret = std::fgets (buff, BUF, stdin);
+        if(fgetret != nullptr) {
+            strcpy(buffer, buff);
+            send(create_socket, buff, strlen(buff), 0);
+        }
     }
     while (strcmp (buffer, "quit\n") != 0);
     printf ("Connection to server closed.\n");

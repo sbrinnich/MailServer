@@ -64,6 +64,8 @@ public:
      *          1 if something went wrong and operation wasn't executed properly
      */
     virtual int doOperation() = 0;
+
+    virtual ~Operation();
 };
 
 #endif //MAILSERVER_OPERATION_H

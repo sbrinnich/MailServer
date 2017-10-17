@@ -4,10 +4,6 @@
 #include <unistd.h>
 
 #include "client_handler.h"
-#include "operations/operation_send.h"
-#include "operations/operation_list.h"
-#include "operations/operation_read.h"
-#include "operations/operation_del.h"
 
 ClientHandler::ClientHandler(char *mailspooldir) : mailspooldir(mailspooldir) {}
 
