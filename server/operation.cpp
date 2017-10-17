@@ -8,7 +8,13 @@ int Operation::getClientInput(int maxsize, char* *ptr){
     // Receive text from client, write to buffer
     ssize_t size = recv(clientsocket, buffer, MAXLINE-1, 0);
 
-    if(size > maxsize){
+    // Client closed connection
+    if(size == 0){
+        return -1;
+    }
+
+    // Recv error or max size exceeded
+    if(size > maxsize || size < 0){
         return 1;
     }
 

@@ -57,6 +57,12 @@ void ClientHandler::handleClient(int clientsocket) {
                 return;
             } else {
                 status = handleClientRequest(clientsocket, buffer);
+                if(status == -1){
+                    // Close connection to client
+                    printf("Client closed connection.\n");
+                    close(clientsocket);
+                    return;
+                }
             }
         }
     }
@@ -74,10 +80,15 @@ int ClientHandler::handleClientRequest(int clientsocket, char* request_msg) {
 
     // Let operation parse the rest of client input
     int parse = op->parseRequest();
-    if(parse != 0){
+    if(parse > 0){
         // Operation could not parse input of client
         perror("Could not parse client input.\n");
         return 1;
+    }
+    if(parse < 0){
+        // Client closed socket
+        perror("Could not receive client input. Client socket closed by remote.\n");
+        return -1;
     }
 
     // Let operation do something

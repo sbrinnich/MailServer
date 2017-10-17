@@ -26,7 +26,8 @@ private:
      * @param clientsocket the socket from the client
      * @param request_msg the message that the client entered to start an operation
      * @return 0 if client request was handled successfully or
-     *          1 if something went wrong
+     *          1 if something went wrong or
+     *          -1 if client closed socket
      */
     int handleClientRequest(int clientsocket, char* request_msg);
 public:

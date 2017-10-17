@@ -9,17 +9,17 @@ int OperationRead::parseRequest() {
     send(clientsocket, "You chose to read an email. Please enter the following data.\nUsername: ",
          strlen("You chose to read an email. Please enter the following data.\nUsername: "), 0);
     ret = getClientInput(9, &username);
-    if(ret == 1){
-        return 1;
+    if(ret == 1 || ret == -1){
+        return ret;
     }
 
     char *nr;
     nr = new char[5];
     send(clientsocket, "Message Number: ", strlen("Message Number: "), 0);
     ret = getClientInput(5, &nr);
-    if(ret == 1){
+    if(ret == 1 || ret == -1){
         delete[] nr;
-        return 1;
+        return ret;
     }
 
     std::stringstream s(nr);

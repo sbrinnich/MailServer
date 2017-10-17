@@ -15,18 +15,18 @@ int OperationSend::parseRequest() {
     send(clientsocket, "You chose to send an email. Please enter the following data.\nSender: ",
          strlen("You chose to send an email. Please enter the following data.\nSender: "), 0);
     ret = getClientInput(9, &sender);
-    if(ret == 1){
-        return 1;
+    if(ret == 1 || ret == -1){
+        return ret;
     }
     send(clientsocket, "Receiver: ", strlen("Receiver: "), 0);
     ret = getClientInput(9, &receiver);
-    if(ret == 1){
-        return 1;
+    if(ret == 1 || ret == -1){
+        return ret;
     }
     send(clientsocket, "Subject: ", strlen("Subject: "), 0);
     ret = getClientInput(81, &subject);
-    if(ret == 1){
-        return 1;
+    if(ret == 1 || ret == -1){
+        return ret;
     }
 
     char* cnt_tmp;
@@ -37,9 +37,9 @@ int OperationSend::parseRequest() {
     do {
         send(clientsocket, "Content: ", strlen("Content: "), 0);
         ret = getClientInput(MAXLINE, &cnt_tmp);
-        if (ret == 1) {
+        if (ret == 1 || ret == -1) {
             delete[] cnt_tmp;
-            return 1;
+            return ret;
         }
         if(strcmp(cnt_tmp, ".") == 0){
             break;

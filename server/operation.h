@@ -26,7 +26,8 @@ protected:
      * @param maxsize the maximum number of characters to be received
      * @param ptr a pointer to a char* where the read text should be copied to
      * @return 0 if read was successful or
-     *          1 if something went wrong (e.g. number of characters of read text exceeded maxsize limit)
+     *          1 if something went wrong (e.g. number of characters of read text exceeded maxsize limit) or
+     *          -1 if client closed socket and receive failed
      */
     int getClientInput(int maxsize, char* *ptr);
 
@@ -55,7 +56,8 @@ public:
     /**
      * Parses the client's input from the class' clientsocket
      * @return 0 if syntax of client was correct and request could be parsed or
-     *          1 if syntax wasn't right or something else went wrong
+     *          1 if syntax wasn't right or something else went wrong or
+     *          -1 if client closed socket and receive failed
      */
     virtual int parseRequest() = 0;
     /**
