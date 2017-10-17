@@ -6,7 +6,7 @@ OperationSend::OperationSend(int clientsocket, char* mailspooldir) : Operation(c
     sender = new char[9];
     receiver = new char[9];
     subject = new char[81];
-    content = new char[MAXLINE];
+    content = new char[MAXMSG];
 }
 
 int OperationSend::parseRequest() {
@@ -18,21 +18,46 @@ int OperationSend::parseRequest() {
     if(ret == 1){
         return 1;
     }
-    send(clientsocket, "Receiver: ", strlen("Receiver:"), 0);
+    send(clientsocket, "Receiver: ", strlen("Receiver: "), 0);
     ret = getClientInput(9, &receiver);
     if(ret == 1){
         return 1;
     }
-    send(clientsocket, "Subject: ", strlen("Subject:"), 0);
+    send(clientsocket, "Subject: ", strlen("Subject: "), 0);
     ret = getClientInput(81, &subject);
     if(ret == 1){
         return 1;
     }
-    send(clientsocket, "Content: ", strlen("Content:"), 0);
-    ret = getClientInput(MAXLINE, &content);
-    if(ret == 1){
-        return 1;
+
+    char* cnt_tmp;
+    cnt_tmp = new char[MAXLINE];
+    std::stringstream cnt_stream;
+    cnt_stream << "";
+
+    do {
+        send(clientsocket, "Content: ", strlen("Content: "), 0);
+        ret = getClientInput(MAXLINE, &cnt_tmp);
+        if (ret == 1) {
+            delete[] cnt_tmp;
+            return 1;
+        }
+        if(strcmp(cnt_tmp, ".") == 0){
+            break;
+        }
+        cnt_stream << cnt_tmp << "\n";
+        if(strlen(cnt_stream.str().c_str()) >= MAXMSG){
+            break;
+        }
+    }while(strcmp(cnt_tmp, ".") != 0);
+    delete[] cnt_tmp;
+
+    int len = strlen(cnt_stream.str().c_str());
+    if(len >= MAXMSG){
+        len = MAXMSG-1;
     }
+    cnt_stream.str().copy(content, len, 0);
+    content[len] = '\0';
+
     return 0;
 }
 

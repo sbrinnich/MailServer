@@ -2,25 +2,6 @@
 
 Operation::Operation(int clientsocket, char* mailspooldir) : clientsocket(clientsocket), mailspooldir(mailspooldir) {}
 
-/*int Operation::testDirectory(){
-
-    std::stringstream filepath;
-    filepath << mailspooldir << "/" << username;
-    std::string path = filepath.str();
-    char* directory = new char[path.length() + 1];
-    std::copy(path.c_str(), path.c_str() + path.length() + 1, directory);
-
-    DIR* dir = opendir(directory);
-    if (dir){
-        closedir(dir);
-        return 0;
-    }else{
-        send(clientsocket, "No matching emails for this username.\n",
-             strlen("No matching emails for this username.\n"), 0);
-        return 1;
-    }
-}*/
-
 int Operation::getClientInput(int maxsize, char* *ptr){
     char buffer[MAXLINE];
     std::fill(buffer, buffer + sizeof(buffer), 0);
@@ -78,13 +59,33 @@ int Operation::parseMailFile(const char *filename, char **sender, char **subject
         strcpy(*subject, line.substr(strlen(s.c_str())).c_str());
 
         // Content
-        getline(file, line);
         s = "Content: ";
-        if(strncmp(line.c_str(), s.c_str(), strlen(s.c_str())) != 0){
-            perror("MailFile Parse Error, Content");
-            return 1;
+
+        std::stringstream cnt_stream;
+        cnt_stream << "";
+        int first = 1;
+
+        while(getline(file, line)){
+            if(line.length() > 0) {
+                if (first == 1) {
+                    if (strncmp(line.c_str(), s.c_str(), strlen(s.c_str())) != 0) {
+                        perror("MailFile Parse Error, Content");
+                        return 1;
+                    }
+                    first = 0;
+                    cnt_stream << line.substr(strlen(s.c_str())).c_str() << "\n";
+                } else {
+                    cnt_stream << line << "\n";
+                }
+            }
         }
-        strcpy(*content, line.substr(strlen(s.c_str())).c_str());
+
+        int len = strlen(cnt_stream.str().c_str());
+        if(len >= MAXMSG){
+            len = MAXMSG-1;
+        }
+        cnt_stream.str().copy(*content, len, 0);
+        (*content)[len] = '\0';
 
         file.close();
         return 0;

@@ -12,6 +12,7 @@
 
 
 #define MAXLINE 1024
+#define MAXMSG 16384
 
 class Operation {
 protected:
@@ -19,18 +20,6 @@ protected:
     int clientsocket;
     char* mailspooldir;
 
-    const int SENDER = 0;
-    const int RECEIVER = 1;
-    const int SUBJECT = 2;
-    const int CONTENT = 3;
-
-
-    /**
-     * tests if directory exists for username
-     * @return 0 if true
-     */
-
-    //int testDirectory();
 
     /**
      * Reads from the client socket and writes read text into ptr.

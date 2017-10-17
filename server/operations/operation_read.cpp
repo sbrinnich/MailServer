@@ -15,7 +15,7 @@ int OperationRead::parseRequest() {
 
     char *nr;
     nr = new char[5];
-    send(clientsocket, "Message Number: ", strlen("Message Number:"), 0);
+    send(clientsocket, "Message Number: ", strlen("Message Number: "), 0);
     ret = getClientInput(5, &nr);
     if(ret == 1){
         delete[] nr;
@@ -49,7 +49,7 @@ int OperationRead::doOperation() {
     char *sender, *subject, *content;
     sender = new char[9];
     subject = new char[81];
-    content = new char[MAXLINE];
+    content = new char[MAXMSG];
     int parsing = parseMailFile(filepath.str().c_str(), &sender, &subject, &content);
 
     // Check if parsing was successful

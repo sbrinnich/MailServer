@@ -14,7 +14,7 @@ int OperationDel::parseRequest() {
 
     char *nr;
     nr = new char[5];
-    send(clientsocket, "Message Number: ", strlen("Message Number:"), 0);
+    send(clientsocket, "Message Number: ", strlen("Message Number: "), 0);
     ret = getClientInput(5, &nr);
     if(ret == 1){
         delete[] nr;
