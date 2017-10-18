@@ -3,26 +3,24 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 #include <sstream>
 #include <dirent.h>
 
 #include "client_handler.h"
 
-#define BUF 1024
-
 int main (int argc, char** argv) {
-    // Check parameters
+    // Check if all parameters are specified
     if(argc != 3){
         printf("Invalid parameters specified!\n");
         printf("Usage: %s [port] [mailspooldirectory]\n", argv[0]);
         return EXIT_FAILURE;
     }
 
+    // Check given port
     int port;
-    char* directory;
     std::stringstream s(argv[1]);
     s >> port;
     if(s.fail() || port <= 0){
@@ -30,6 +28,9 @@ int main (int argc, char** argv) {
         printf("Usage: %s [port] [mailspooldirectory]\n", argv[0]);
         return EXIT_FAILURE;
     }
+
+    // Check given directory (check if directory exists)
+    char* directory;
     directory = argv[2];
     DIR* dir = opendir(directory);
     if(!dir){
@@ -43,25 +44,23 @@ int main (int argc, char** argv) {
     socklen_t addrlen;
     struct sockaddr_in address, cliaddress;
 
+    // Create instance of clientHandler
     ClientHandler* clientHandler = new ClientHandler(directory);
 
+    // Create socket
     create_socket = socket (AF_INET, SOCK_STREAM, 0);
 
+    // Define socket information (IPv4, listening port)
     memset(&address,0,sizeof(address));
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons (port);
 
+    // Bind server socket
     if (bind ( create_socket, (struct sockaddr *) &address, sizeof (address)) != 0) {
         perror("bind error");
         return EXIT_FAILURE;
     }
-
-#ifdef SO_REUSEPORT
-    int reuse = 1;
-    if (setsockopt(create_socket, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0)
-        perror("setsockopt(SO_REUSEPORT) failed");
-#endif
 
     // Listen for up to 5 clients
     listen (create_socket, 5);
@@ -72,15 +71,17 @@ int main (int argc, char** argv) {
         // Wait for clients to connect to server
         printf("Waiting for connections...\n");
         new_socket = accept ( create_socket, (struct sockaddr *) &cliaddress, &addrlen );
-        if (new_socket > 0)
-        {
-            // New client connected, send welcome message
+
+        if (new_socket > 0) {
+            // New client connected, give socket to clientHandler
             printf ("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
             clientHandler->handleClient(new_socket);
         }
     }
+
     // Close server socket
     close (create_socket);
     delete clientHandler;
+
     return EXIT_SUCCESS;
 }

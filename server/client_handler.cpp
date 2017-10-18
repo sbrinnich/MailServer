@@ -74,6 +74,7 @@ int ClientHandler::handleClientRequest(int clientsocket, char* request_msg) {
 
     Operation *op = getOperation(request_msg, clientsocket);
 
+    // Return 1 if no operation for handling client's command could be found
     if(op == nullptr) {
         return 1;
     }
