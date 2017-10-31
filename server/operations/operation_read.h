@@ -5,12 +5,12 @@
 
 class OperationRead : public Operation {
 private:
-    char *username;
     int messagenr;
 
 public:
-    OperationRead(int clientsocket, char* mailspooldir);
+    OperationRead(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
     ~OperationRead();
+    int doPreparation() override;
     int parseRequest() override;
     int doOperation() override;
 };

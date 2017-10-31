@@ -7,11 +7,12 @@ class OperationSend : public Operation {
 
 
 private:
-    char *sender, *receiver, *subject, *content;
+    char *receiver, *subject, *content;
 
 public:
-    OperationSend(int clientsocket, char* mailspooldir);
+    OperationSend(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
     ~OperationSend();
+    int doPreparation() override;
     int parseRequest() override;
     int doOperation() override;
 };

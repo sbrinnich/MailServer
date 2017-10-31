@@ -8,8 +8,16 @@
 #include <cstring>
 #include <sstream>
 #include <dirent.h>
+#include <pthread.h>
+#include <thread>
 
 #include "client_handler.h"
+
+void clientConnect(int clientSocket, char* directory){
+    ClientHandler* clientHandler = new ClientHandler(directory);
+    clientHandler->handleClient(clientSocket);
+    delete clientHandler;
+}
 
 int main (int argc, char** argv) {
     // Check if all parameters are specified
@@ -44,8 +52,8 @@ int main (int argc, char** argv) {
     socklen_t addrlen;
     struct sockaddr_in address, cliaddress;
 
-    // Create instance of clientHandler
-    ClientHandler* clientHandler = new ClientHandler(directory);
+    // Create clientHandler
+    ClientHandler* clientHandler;
 
     // Create socket
     create_socket = socket (AF_INET, SOCK_STREAM, 0);
@@ -75,7 +83,9 @@ int main (int argc, char** argv) {
         if (new_socket > 0) {
             // New client connected, give socket to clientHandler
             printf ("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
-            clientHandler->handleClient(new_socket);
+
+            std::thread t(clientConnect, new_socket, directory);
+            t.detach();
         }
     }
 

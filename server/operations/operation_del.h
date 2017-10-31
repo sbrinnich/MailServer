@@ -6,12 +6,12 @@
 class OperationDel : public Operation {
 
 private:
-    char * username;
     int messagenr;
 
 public:
-    OperationDel(int clientsocket, char* mailspooldir);
+    OperationDel(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
     ~OperationDel();
+    int doPreparation() override;
     int parseRequest() override;
     int doOperation() override;
 };

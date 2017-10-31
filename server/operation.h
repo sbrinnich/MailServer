@@ -9,6 +9,7 @@
 #include <cstring>
 #include <dirent.h>
 #include <sys/stat.h>
+#include "client_handler.h"
 
 
 #define MAXLINE 1024
@@ -19,6 +20,7 @@ protected:
     char buffer[MAXLINE];
     int clientsocket;
     char* mailspooldir;
+    ClientHandler* clientHandler;
 
 
     /**
@@ -52,7 +54,15 @@ protected:
     char* getNthMailFilename(const char* filepath, int n);
 
 public:
-    Operation(int clientsocket, char* mailspooldir);
+    Operation(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
+
+    /**
+     * Prepares the operation for parsing input later
+     * @return 0 if operation was prepared successfully or
+     *          1 if something went wrong and operation wasn't prepared properly (e.g. client not logged in)
+     */
+    virtual int doPreparation() = 0;
+
     /**
      * Parses the client's input from the class' clientsocket
      * @return 0 if syntax of client was correct and request could be parsed or

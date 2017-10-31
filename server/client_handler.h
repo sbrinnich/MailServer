@@ -1,11 +1,7 @@
 #ifndef MAILSERVER_CLIENT_HANDLER_H
 #define MAILSERVER_CLIENT_HANDLER_H
 
-#include "operation.h"
-#include "operations/operation_send.h"
-#include "operations/operation_list.h"
-#include "operations/operation_read.h"
-#include "operations/operation_del.h"
+class Operation;
 
 class ClientHandler {
 private:
@@ -13,6 +9,12 @@ private:
      * Char pointer containing the directory path to the mailspool
      */
     char* mailspooldir;
+
+    /**
+     * Char pointer containing the username of the user currently logged in (or nullptr, if user is not logged in)
+     */
+    char* username;
+
     /**
      * Searches for the correct implementation of the operation for the command in buffer
      * @param buffer a char* containing a command
@@ -36,11 +38,24 @@ public:
      * @param mailspooldir a path to the mails pool directory
      */
     ClientHandler(char* mailspooldir);
+
     /**
      * Handles a client's requests
      * @param clientsocket the socket from the client
      */
     void handleClient(int clientsocket);
+
+    /**
+     * Sets the username of currently logged in user to given char pointer
+     * @param username a char pointer containing a username of max 8 characters
+     */
+    void setUsername(char* username);
+
+    /**
+     * Returns the username of currently logged in user
+     * @return a char pointer of max 8 characters length containing the username
+     */
+    char* getUsername();
 };
 
 #endif //MAILSERVER_CLIENT_HANDLER_H

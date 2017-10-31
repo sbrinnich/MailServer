@@ -2,23 +2,26 @@
 
 #include "operation_send.h"
 
-OperationSend::OperationSend(int clientsocket, char* mailspooldir) : Operation(clientsocket, mailspooldir) {
-    sender = new char[9];
+OperationSend::OperationSend(int clientsocket, char* mailspooldir, ClientHandler* clientHandler) :
+        Operation(clientsocket, mailspooldir, clientHandler) {
     receiver = new char[9];
     subject = new char[81];
     content = new char[MAXMSG];
 }
 
+int OperationSend::doPreparation() {
+    if(clientHandler->getUsername() == nullptr){
+        send(clientsocket, "Please login to use this command!\n", strlen("Please login to use this command!\n"), 0);
+        return 1;
+    }
+    return 0;
+}
+
 int OperationSend::parseRequest() {
 
     int ret = 0;
-    send(clientsocket, "You chose to send an email. Please enter the following data.\nSender: ",
-         strlen("You chose to send an email. Please enter the following data.\nSender: "), 0);
-    ret = getClientInput(9, &sender);
-    if(ret == 1 || ret == -1){
-        return ret;
-    }
-    send(clientsocket, "Receiver: ", strlen("Receiver: "), 0);
+    send(clientsocket, "You chose to send an email. Please enter the following data.\nReceiver: ",
+         strlen("You chose to send an email. Please enter the following data.\nReceiver: "), 0);
     ret = getClientInput(9, &receiver);
     if(ret == 1 || ret == -1){
         return ret;
@@ -64,8 +67,7 @@ int OperationSend::parseRequest() {
 int OperationSend::doOperation() {
 
     // Check if all parameters are set
-    if(sender == NULL || strcmp(sender, "") == 0 ||
-            receiver == NULL || strcmp(receiver, "") == 0 ||
+    if(receiver == NULL || strcmp(receiver, "") == 0 ||
             subject == NULL || strcmp(subject, "") == 0 ||
             content == NULL || strcmp(content, "") == 0){
         return 1;
@@ -84,7 +86,7 @@ int OperationSend::doOperation() {
     DIR* dir = opendir(dirpath.str().c_str());
     if(!dir){
         // Create directory if it doesn't exist yet
-        mkdir(dirpath.str().c_str(), 0777);
+        mkdir(dirpath.str().c_str(), 0777); // TODO change 0777
     }
     closedir(dir);
 
@@ -94,7 +96,7 @@ int OperationSend::doOperation() {
     // Open file and write data into it
     std::ofstream file;
     file.open(dirpath.str().c_str(), std::ios::out);
-    file << "Sender: " << sender << std::endl;
+    file << "Sender: " << clientHandler->getUsername() << std::endl;
     file << "Subject: " << subject << std::endl;
     file << "Content: " << content << std::endl;
 
@@ -104,7 +106,6 @@ int OperationSend::doOperation() {
 }
 
 OperationSend::~OperationSend() {
-    delete[] sender;
     delete[] receiver;
     delete[] subject;
     delete[] content;

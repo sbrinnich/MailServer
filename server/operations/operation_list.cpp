@@ -1,28 +1,28 @@
 #include "operation_list.h"
 
-OperationList::OperationList(int clientsocket, char* mailspooldir) : Operation(clientsocket, mailspooldir) {
-    username = new char[9];
+OperationList::OperationList(int clientsocket, char* mailspooldir, ClientHandler* clientHandler) :
+        Operation(clientsocket, mailspooldir, clientHandler) {
+}
+
+int OperationList::doPreparation() {
+    if(clientHandler->getUsername() == nullptr){
+        send(clientsocket, "Please login to use this command!\n", strlen("Please login to use this command!\n"), 0);
+        return 1;
+    }
+    return 0;
 }
 
 int OperationList::parseRequest() {
-    send(clientsocket, "You chose to list your emails. Please enter the following data.\nUsername: ",
-         strlen("You chose to list your emails. Please enter the following data.\nUsername: "), 0);
-    return getClientInput(9, &username);
+    return 0;
 }
 
 int OperationList::doOperation() {
-    // Check if username is set
-    if(username == NULL || strcmp(username, "") == 0){
-        perror("Username for LIST command not set");
-        return 1;
-    }
-
     int mailcount = 0;
     std::stringstream mailsubjects;
 
     // Open directory
     std::stringstream dirpath;
-    dirpath << mailspooldir << "/" << username;
+    dirpath << mailspooldir << "/" << clientHandler->getUsername();
     DIR* dir = opendir(dirpath.str().c_str());
     if(dir){
         // Directory exists -> mailcount != 0, loop through files
@@ -35,7 +35,7 @@ int OperationList::doOperation() {
         while((ent = readdir(dir)) != NULL){
             if(strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
                 std::stringstream filepath;
-                filepath << mailspooldir << "/" << username << "/" << ent->d_name;
+                filepath << mailspooldir << "/" << clientHandler->getUsername() << "/" << ent->d_name;
                 parsing = parseMailFile(filepath.str().c_str(), &sender, &subject, &content);
                 if (parsing == 0) {
                     mailcount++;
@@ -60,5 +60,4 @@ int OperationList::doOperation() {
 }
 
 OperationList::~OperationList() {
-    delete[] username;
 }

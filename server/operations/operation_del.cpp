@@ -1,21 +1,24 @@
 #include "operation_del.h"
 
-OperationDel::OperationDel(int clientsocket, char* mailspooldir) : Operation(clientsocket, mailspooldir) {
-    username = new char[9];
+OperationDel::OperationDel(int clientsocket, char* mailspooldir, ClientHandler* clientHandler) :
+        Operation(clientsocket, mailspooldir, clientHandler) {
+}
+
+int OperationDel::doPreparation() {
+    if(clientHandler->getUsername() == nullptr){
+        send(clientsocket, "Please login to use this command!\n", strlen("Please login to use this command!\n"), 0);
+        return 1;
+    }
+    return 0;
 }
 
 int OperationDel::parseRequest() {
     int ret = 0;
-    send(clientsocket, "You chose to delete an email. Please enter the following data.\nUsername: ",
-         strlen("You chose to delete an email. Please enter the following data.\nUsername: "), 0);
-    ret = getClientInput(9, &username);
-    if(ret == 1 || ret == -1){
-        return ret;
-    }
 
     char *nr;
     nr = new char[5];
-    send(clientsocket, "Message Number: ", strlen("Message Number: "), 0);
+    send(clientsocket, "You chose to delete an email. Please enter the following data.\nMessage Number: ",
+         strlen("You chose to delete an email. Please enter the following data.\nMessage Number: "), 0);
     ret = getClientInput(5, &nr);
     if(ret == 1 || ret == -1){
         delete[] nr;
@@ -32,12 +35,12 @@ int OperationDel::parseRequest() {
 }
 
 int OperationDel::doOperation() {
-    if(username == NULL || strcmp(username, "") == 0 || messagenr <= 0){
+    if(messagenr <= 0){
         return 1;
     }
 
     std::stringstream filepath;
-    filepath << mailspooldir << "/" << username;
+    filepath << mailspooldir << "/" << clientHandler->getUsername();
     char* filename = getNthMailFilename(filepath.str().c_str(), messagenr);
     if(filename == nullptr){
         return 1;
@@ -59,5 +62,4 @@ int OperationDel::doOperation() {
 }
 
 OperationDel::~OperationDel() {
-    delete[] username;
 }

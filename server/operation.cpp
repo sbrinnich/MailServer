@@ -1,6 +1,7 @@
 #include "operation.h"
 
-Operation::Operation(int clientsocket, char* mailspooldir) : clientsocket(clientsocket), mailspooldir(mailspooldir) {}
+Operation::Operation(int clientsocket, char* mailspooldir, ClientHandler* clientHandler) :
+        clientsocket(clientsocket), mailspooldir(mailspooldir),  clientHandler(clientHandler) {}
 
 int Operation::getClientInput(int maxsize, char* *ptr){
     char buffer[MAXLINE];

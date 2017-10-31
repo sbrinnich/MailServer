@@ -5,11 +5,11 @@
 
 class OperationList : public Operation {
 private:
-    char *username;
 
 public:
-    OperationList(int clientsocket, char* mailspooldir);
+    OperationList(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
     ~OperationList();
+    int doPreparation() override;
     int parseRequest() override;
     int doOperation() override;
 };

@@ -1,21 +1,24 @@
 #include "operation_read.h"
 
-OperationRead::OperationRead(int clientsocket, char* mailspooldir) : Operation(clientsocket, mailspooldir) {
-    username = new char[9];
+OperationRead::OperationRead(int clientsocket, char* mailspooldir, ClientHandler* clientHandler) :
+        Operation(clientsocket, mailspooldir, clientHandler) {
+}
+
+int OperationRead::doPreparation() {
+    if(clientHandler->getUsername() == nullptr){
+        send(clientsocket, "Please login to use this command!\n", strlen("Please login to use this command!\n"), 0);
+        return 1;
+    }
+    return 0;
 }
 
 int OperationRead::parseRequest() {
     int ret = 0;
-    send(clientsocket, "You chose to read an email. Please enter the following data.\nUsername: ",
-         strlen("You chose to read an email. Please enter the following data.\nUsername: "), 0);
-    ret = getClientInput(9, &username);
-    if(ret == 1 || ret == -1){
-        return ret;
-    }
 
     char *nr;
     nr = new char[5];
-    send(clientsocket, "Message Number: ", strlen("Message Number: "), 0);
+    send(clientsocket, "You chose to read an email. Please enter the following data.\nMessage Number: ",
+         strlen("You chose to read an email. Please enter the following data.\nMessage Number: "), 0);
     ret = getClientInput(5, &nr);
     if(ret == 1 || ret == -1){
         delete[] nr;
@@ -32,13 +35,13 @@ int OperationRead::parseRequest() {
 }
 
 int OperationRead::doOperation() {
-    if(username == NULL || strcmp(username, "") == 0 || messagenr <= 0){
+    if(messagenr <= 0){
         return 1;
     }
 
     // Get filepath
     std::stringstream filepath;
-    filepath << mailspooldir << "/" << username;
+    filepath << mailspooldir << "/" << clientHandler->getUsername();
     char* filename = getNthMailFilename(filepath.str().c_str(), messagenr);
     if(filename == nullptr){
         return 1;
@@ -59,7 +62,7 @@ int OperationRead::doOperation() {
 
     // Print email (send to socket)
     std::stringstream out;
-    out << "Sender: " << sender << "\nReceiver: " << username <<
+    out << "Sender: " << sender << "\nReceiver: " << clientHandler->getUsername() <<
         "\nSubject: " << subject << "\nContent: " << content << "\n";
 
     send(clientsocket, out.str().c_str(), strlen(out.str().c_str()), 0);
@@ -73,5 +76,4 @@ int OperationRead::doOperation() {
 }
 
 OperationRead::~OperationRead() {
-    delete[] username;
 }
