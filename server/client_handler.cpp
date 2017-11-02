@@ -142,7 +142,7 @@ int ClientHandler::getFailedLogins() {
 }
 
 int ClientHandler::checkBlockedIPs() {
-    
+    return 0;
 }
 
 void ClientHandler::blockClientIP() {

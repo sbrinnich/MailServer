@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstring>
 #include <sstream>
+#include <termios.h>
 
 #define BUF 16384
 
@@ -69,13 +70,31 @@ int main (int argc, char **argv) {
             printf("%s",buffer);
         }
 
+        bool pwd = (strstr(buffer, "Password") != nullptr);
+        if(pwd){
+            // Hide password input
+            termios stty;
+            tcgetattr(STDIN_FILENO, &stty);
+            stty.c_lflag &= ~ECHO;
+            tcsetattr(STDIN_FILENO, TCSANOW, &stty);
+        }
         // Clear buffer
         std::fill(buffer, buffer + sizeof(buffer), 0);
 
         // Read message from stdin and send to server
-        char* fgetret = std::fgets (buffer, BUF, stdin);
-        if(fgetret != nullptr) {
+        char *fgetret = std::fgets(buffer, BUF, stdin);
+        if (fgetret != nullptr) {
             send(create_socket, buffer, strlen(buffer), 0);
+        }
+        if(pwd){
+            // Show input again
+            termios stty;
+            tcgetattr(STDIN_FILENO, &stty);
+            stty.c_lflag |= ECHO;
+            tcsetattr(STDIN_FILENO, TCSANOW, &stty);
+
+            // Add newline
+            printf("\n");
         }
     }while (strcmp (buffer, "quit\n") != 0);
 
