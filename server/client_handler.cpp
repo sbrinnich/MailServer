@@ -11,7 +11,7 @@
 #include "operations/operation_del.h"
 #include "operations/operation_login.h"
 
-ClientHandler::ClientHandler(char *mailspooldir) : mailspooldir(mailspooldir), username(nullptr) {}
+ClientHandler::ClientHandler(char *mailspooldir) : mailspooldir(mailspooldir), username(nullptr), failedLogins(0) {}
 
 Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
     if(strcasecmp(buffer, "LOGIN\n") == 0){
@@ -131,4 +131,20 @@ void ClientHandler::setUsername(char *username) {
 
 char* ClientHandler::getUsername() {
     return this->username;
+}
+
+void ClientHandler::incrementFailedLogins() {
+    this->failedLogins++;
+}
+
+int ClientHandler::getFailedLogins() {
+    return this->failedLogins;
+}
+
+int ClientHandler::checkBlockedIPs() {
+    
+}
+
+void ClientHandler::blockClientIP() {
+
 }

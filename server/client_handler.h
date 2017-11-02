@@ -1,6 +1,8 @@
 #ifndef MAILSERVER_CLIENT_HANDLER_H
 #define MAILSERVER_CLIENT_HANDLER_H
 
+#define IP_BLOCK_MINUTES 2
+
 class Operation;
 
 class ClientHandler {
@@ -14,6 +16,11 @@ private:
      * Char pointer containing the username of the user currently logged in (or nullptr, if user is not logged in)
      */
     char* username;
+
+    /**
+     * Integer containing the number of failed logins
+     */
+    int failedLogins;
 
     /**
      * Searches for the correct implementation of the operation for the command in buffer
@@ -56,6 +63,30 @@ public:
      * @return a char pointer of max 8 characters length containing the username
      */
     char* getUsername();
+
+    /**
+     * Increments failedLogins
+     */
+    void incrementFailedLogins();
+
+    /**
+     * Returns the number of failed logins
+     * @return an int containing the number of failed logins
+     */
+    int getFailedLogins();
+
+    /**
+     * Goes through the list of blocked IPs and deletes those, which are allowed to connect again.
+     * Also checks if currently connected client IP is allowed
+     * @return 0 if currently connected client IP is allowed or
+     *          1 if currently connected client IP is not allowed to connect (is on blacklist)
+     */
+    int checkBlockedIPs();
+
+    /**
+     * Adds current client's IP address to a blacklist to stop him from connecting again in a while
+     */
+    void blockClientIP();
 };
 
 #endif //MAILSERVER_CLIENT_HANDLER_H
