@@ -8,6 +8,8 @@
 #include <cstring>
 #include <sstream>
 #include <termios.h>
+#include <sys/stat.h>
+#include "../server/operation.h"
 
 #define BUF 16384
 
@@ -68,6 +70,49 @@ int main (int argc, char **argv) {
         {
             buffer[size]= '\0';
             printf("%s",buffer);
+        }
+
+        if(strcmp(buffer, "Which file do you want to add? ") == 0){
+            char *fgetret = std::fgets(buffer, BUF, stdin);
+            if (fgetret != nullptr) {
+                //send filename
+                send(create_socket, buffer, strlen(buffer), 0);
+
+                //get size of file
+                struct stat st{};
+                stat(buffer, &st);
+                long filesize = st.st_size;                 //long fileSize = getFileSize(file);
+                auto * const filesizechar = reinterpret_cast<char * const>(&filesize);//send as char array so that get client input works
+                send(create_socket, filesizechar, strlen(filesizechar), 0);
+
+                //open file
+                FILE *file;
+                // Open the file in binary mode using the "rb" format string
+                // This also checks if the file exists and/or can be opened for reading correctly
+                if ((file = fopen(buffer, "rb")) == nullptr){
+                    perror("Could not open specified file\n");
+                } else{
+                    printf("File opened successfully\n");
+                }
+
+                // read file and send file to server
+                long SizeCheck = 0;
+                auto *CopyHelper = (char*)malloc(1024);
+                if(filesize > 1024){
+                    while(SizeCheck < filesize){
+                        size_t Read = fread(CopyHelper, 1024, 1, file);//gibt anzahl speicherobjecte zurück
+                        ssize_t Sent = send(create_socket, CopyHelper, Read, 0);
+                        SizeCheck += Sent;
+                        for(int i = 0; i < Sent; i++){
+                            if(CopyHelper[i] == '\n'){
+                                SizeCheck += 1;//because \n is 2 byte
+                            }
+                        }
+                    }
+                }
+                fclose(file);
+                free(CopyHelper);
+            }
         }
 
         bool pwd = (strstr(buffer, "Password") != nullptr);

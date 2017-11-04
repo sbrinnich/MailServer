@@ -61,10 +61,75 @@ int OperationSend::parseRequest() {
     cnt_stream.str().copy(content, len, 0);
     content[len] = '\0';
 
+    char * attachment = new char [8];
+    send(clientsocket, "Add file attachment?(y/n) ", strlen("Add file attachment?(y/n) "), 0);
+    ret = getClientInput(8, &attachment);
+    if(ret == 1 || ret == -1){
+        delete [] attachment;
+        return ret;
+    }
+    if(strcmp(attachment, "y") == 0){
+        ret = sendFileAttachment();
+        if(ret == 1 || ret == -1){
+            delete [] attachment;
+            return ret;
+        }
+
+    }
+    fileattached = true;
+    delete [] attachment;
     return 0;
 }
 
-int OperationSend::doOperation() {
+
+int OperationSend::sendFileAttachment() {
+
+    send(clientsocket, "Which file do you want to add? ", strlen("Which file do you want to add? "), 0);
+
+    auto * localfile = new char [MAXLINE];
+    int ret = getClientInput(MAXLINE, &localfile);
+    if (ret == 1 || ret == -1) {
+        delete[] localfile;
+        return ret;
+    }
+
+    send(clientsocket, "Opening file...", strlen("Opening file..."), 0);
+
+    //get filesize from client
+    char * FileSizeChar = new char[MAXLINE];
+    ret = getClientInput(MAXLINE, &FileSizeChar);
+    char *end;
+    auto FileSize = static_cast<size_t>(strtol(FileSizeChar,&end,10));
+    if (ret == 1 || ret == -1) {
+        delete[] FileSizeChar;
+        return ret;
+    }
+
+    //to do: save file in dir
+
+    //save file at server
+    FILE *file = fopen(localfile, "w");//creates empty file to write into
+    char* copyhelper;
+    long SizeCheck = 0;
+    copyhelper = (char*)malloc(FileSize + 1);
+    while(SizeCheck < FileSize){
+        ssize_t Received = recv(clientsocket, copyhelper, FileSize, 0);
+        ssize_t  Written = fwrite(copyhelper, sizeof(char), static_cast<size_t>(Received), file);
+        SizeCheck += Written;
+        for(int i = 0; i < Written; i++){
+            if(copyhelper[i] == '\n'){
+                SizeCheck += 1;//because \n is 2 byte
+            }
+        }
+    }
+    fclose(file);
+    free(copyhelper);
+    return 0;
+
+}
+
+
+int OperationSend::doOperation() {//to do: add file attachment to spool
 
     // Check if all parameters are set
     if(receiver == NULL || strcmp(receiver, "") == 0 ||

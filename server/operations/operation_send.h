@@ -8,6 +8,8 @@ class OperationSend : public Operation {
 
 private:
     char *receiver, *subject, *content;
+    bool fileattached = false;
+    int sendFileAttachment();
 
 public:
     OperationSend(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
