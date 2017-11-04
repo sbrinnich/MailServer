@@ -9,7 +9,7 @@ class OperationSend : public Operation {
 private:
     char *receiver, *subject, *content;
     bool fileattached = false;
-    int sendFileAttachment();
+    int sendFileAttachment(std::string filename);
 
 public:
     OperationSend(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);

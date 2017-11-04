@@ -77,7 +77,7 @@ int OperationSend::parseRequest() {
 }
 
 
-int OperationSend::sendFileAttachment() {
+int OperationSend::sendFileAttachment(std::string filename) {
 
     //todo save file from dir
     //todo list name of file attachment
@@ -104,8 +104,15 @@ int OperationSend::sendFileAttachment() {
         return ret;
     }
 
+    //adds the attachment name from client to filename of mail
+    filename += "_";
+    filename += localfile;
+
+    //convert string to char array
+    const char *filenamefin = filename.c_str();
+
     //save file at server
-    FILE *file = fopen(localfile, "w");//creates empty file to write into
+    FILE *file = fopen(filenamefin, "w");//creates empty file to write into
     char* copyhelper;
     long SizeCheck = 0;
     copyhelper = (char*)malloc(FileSize + 1);
@@ -126,7 +133,7 @@ int OperationSend::sendFileAttachment() {
 }
 
 
-int OperationSend::doOperation() {//to do: add file attachment to spool
+int OperationSend::doOperation() {
 
     // Check if all parameters are set
     if(receiver == NULL || strcmp(receiver, "") == 0 ||
@@ -167,14 +174,10 @@ int OperationSend::doOperation() {//to do: add file attachment to spool
 
     //handle attachment
     if(fileattached){
-        std::stringstream dirpath_forattachment;
-        dirpath_forattachment << mailspooldir << "/" << receiver;
-
         std::stringstream attachment;
         attachment << mailspooldir << "/" << receiver;
-        dirpath_forattachment << "/" << filename << "_attachment";
-        dir = opendir(dirpath_forattachment.str().c_str());
-        int ret = sendFileAttachment();
+        dir = opendir(attachment.str().c_str());
+        int ret = sendFileAttachment(filename);
         closedir(dir);
         if(ret == 1 || ret == -1){
             return ret;
