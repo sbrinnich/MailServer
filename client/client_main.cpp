@@ -115,6 +115,39 @@ int main (int argc, char **argv) {
             }
         }
 
+        if(strcmp(buffer, "Downloading file...\n") == 0){
+            //send
+            send(create_socket, "Ok", strlen("Ok"), 0);
+            //get filename
+            auto * filename = new char [MAXLINE];
+            recv(create_socket,filename,BUF-1, 0);
+
+            send(create_socket, "Creating file...", strlen("Creating file..."), 0);
+
+            //get filesize
+            char * FileSizeChar = new char[MAXLINE];
+            recv(create_socket,FileSizeChar,BUF-1, 0);
+            char *end;
+            auto FileSize = static_cast<size_t>(strtol(FileSizeChar,&end,10));
+
+            FILE *file = fopen(filename, "w");//creates empty file to write into
+            char* copyhelper;
+            long SizeCheck = 0;
+            copyhelper = (char*)malloc(FileSize + 1);
+            while(SizeCheck < FileSize){
+                ssize_t Received = recv(create_socket, copyhelper, FileSize, 0);
+                ssize_t  Written = fwrite(copyhelper, sizeof(char), static_cast<size_t>(Received), file);
+                SizeCheck += Written;
+                for(int i = 0; i < Written; i++){
+                    if(copyhelper[i] == '\n'){
+                        SizeCheck += 1;//because \n is 2 byte
+                    }
+                }
+            }
+            fclose(file);
+            free(copyhelper);
+        }
+
         bool pwd = (strstr(buffer, "Password") != nullptr);
         if(pwd){
             // Hide password input

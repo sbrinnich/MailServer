@@ -108,7 +108,7 @@ char* Operation::getNthMailFilename(const char *filepath, int n) {
     struct dirent *ent;
     int count = 0;
     while ((ent = readdir(dir)) != NULL) {
-        if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
+        if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0 && std::string(ent->d_name).find("_attachment") == -1) {//ignores attachments
             count++;
             if(count == n){
                 return ent->d_name;

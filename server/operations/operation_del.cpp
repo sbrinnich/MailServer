@@ -51,6 +51,26 @@ int OperationDel::doOperation() {
     char* filenamewithpath = new char[path.length() + 1];
     std::copy(path.c_str(), path.c_str() + path.length() + 1, filenamewithpath);
 
+
+    //handle attachment if exists
+    std::string filenamestr(filenamewithpath);
+    //get rid of .txt
+    long extension = filenamestr.find(".txt");
+    if(extension != std::string::npos){
+        filenamestr.resize(extension);
+    }
+    filenamestr += "_attachment";
+    std::ifstream infile(filenamestr);
+    bool ret = infile.good();
+    if(ret){
+        if(std::remove(filenamestr.c_str()) == 0){
+            return 0;
+        }else{
+            perror( "Error deleting attachment: No such file or directory.\n" );
+            return 1;
+        }
+    }
+
     if(std::remove(filenamewithpath) == 0){
         send(clientsocket, "Email was successfully deleted.\n",
              strlen("Email was successfully deleted.\n"), 0);

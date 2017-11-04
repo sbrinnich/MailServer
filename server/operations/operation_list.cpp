@@ -38,8 +38,13 @@ int OperationList::doOperation() {
                 filepath << mailspooldir << "/" << clientHandler->getUsername() << "/" << ent->d_name;
                 parsing = parseMailFile(filepath.str().c_str(), &sender, &subject, &content);
                 if (parsing == 0) {
-                    mailcount++;
-                    mailsubjects << "#" << mailcount << ": " << subject << std::endl;
+                    //filter out attachments and list them too
+                    if(filepath.str().find("attachment") != -1){
+                        mailsubjects << "#" << mailcount << " has a file attachment." << std::endl;
+                    }else{
+                        mailcount++;
+                        mailsubjects << "#" << mailcount << ": " << subject << std::endl;
+                    }
                 } else {
                     perror("MailFile Parse Error in LIST");
                 }

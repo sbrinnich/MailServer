@@ -78,11 +78,6 @@ int OperationSend::parseRequest() {
 
 
 int OperationSend::sendFileAttachment(std::string filename) {
-
-    //todo save file from dir
-    //todo list name of file attachment
-    //todo delete attachment
-
     send(clientsocket, "Which file do you want to add? ", strlen("Which file do you want to add? "), 0);
 
     auto * localfile = new char [MAXLINE];
@@ -104,9 +99,8 @@ int OperationSend::sendFileAttachment(std::string filename) {
         return ret;
     }
 
-    //adds the attachment name from client to filename of mail
-    filename += "_";
-    filename += localfile;
+    //adds the attachment
+    filename += "_attachment";
 
     //convert string to char array
     const char *filenamefin = filename.c_str();
