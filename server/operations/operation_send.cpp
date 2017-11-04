@@ -69,20 +69,19 @@ int OperationSend::parseRequest() {
         return ret;
     }
     if(strcmp(attachment, "y") == 0){
-        ret = sendFileAttachment();
-        if(ret == 1 || ret == -1){
-            delete [] attachment;
-            return ret;
-        }
-
+        fileattached = true;
+        delete [] attachment;
     }
-    fileattached = true;
     delete [] attachment;
     return 0;
 }
 
 
 int OperationSend::sendFileAttachment() {
+
+    //todo save file from dir
+    //todo list name of file attachment
+    //todo delete attachment
 
     send(clientsocket, "Which file do you want to add? ", strlen("Which file do you want to add? "), 0);
 
@@ -104,8 +103,6 @@ int OperationSend::sendFileAttachment() {
         delete[] FileSizeChar;
         return ret;
     }
-
-    //to do: save file in dir
 
     //save file at server
     FILE *file = fopen(localfile, "w");//creates empty file to write into
@@ -148,6 +145,7 @@ int OperationSend::doOperation() {//to do: add file attachment to spool
 
     // Check if directory exists
     dirpath << mailspooldir << "/" << receiver;
+
     DIR* dir = opendir(dirpath.str().c_str());
     if(!dir){
         // Create directory if it doesn't exist yet
@@ -166,6 +164,23 @@ int OperationSend::doOperation() {//to do: add file attachment to spool
     file << "Content: " << content << std::endl;
 
     file.close();
+
+    //handle attachment
+    if(fileattached){
+        std::stringstream dirpath_forattachment;
+        dirpath_forattachment << mailspooldir << "/" << receiver;
+
+        std::stringstream attachment;
+        attachment << mailspooldir << "/" << receiver;
+        dirpath_forattachment << "/" << filename << "_attachment";
+        dir = opendir(dirpath_forattachment.str().c_str());
+        int ret = sendFileAttachment();
+        closedir(dir);
+        if(ret == 1 || ret == -1){
+            return ret;
+        }
+    }
+
 
     return 0;
 }
