@@ -78,9 +78,6 @@ int OperationLogin::doOperation() {
     if(ldap_count_entries(ld, result) < 1){
         // User not found
         clientHandler->incrementFailedLogins();
-        if(clientHandler->getFailedLogins() >= 3) {
-            clientHandler->blockClientIP();
-        }
         return 1;
     }
 
@@ -94,9 +91,6 @@ int OperationLogin::doOperation() {
     if (rc != LDAP_SUCCESS){
         // Wrong password
         clientHandler->incrementFailedLogins();
-        if(clientHandler->getFailedLogins() >= 3) {
-            clientHandler->blockClientIP();
-        }
         return 1;
     }
 

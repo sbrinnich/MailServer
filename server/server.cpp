@@ -1,12 +1,42 @@
 #include "server.h"
 
-void clientConnect(int clientSocket, char *mailspooldir){
+void Server::clientConnect(int clientSocket){
+    // Check if client is blocked
+    auto it = blocked_clients.find(getIpFromSocket(clientSocket));
+    if(it != blocked_clients.end()){
+        if(it->second > time(0)){
+            printf("Blocked client tried to connect.\n");
+            send(clientSocket, "Your IP is blocked for a limited time!\n",
+                 strlen("Your IP is blocked for a limited time!\n"), 0);
+            close(clientSocket);
+            return;
+        }else{
+            // Blocked time ran out, client allowed to connect again
+            blocked_clients.erase(it->first);
+        }
+    }
+
     ClientHandler* clientHandler = new ClientHandler(mailspooldir);
-    clientHandler->handleClient(clientSocket);
+    int status = clientHandler->handleClient(clientSocket);
+    switch(status){
+        case 1:
+            // Client should be blocked
+            blockClient(clientSocket);
+            printf("Client blocked because of too many wrong login tries.\n");
+            send(clientSocket, "ERR\n\nToo many wrong tries! Your IP got blocked for a limited time!\n",
+                 strlen("ERR\n\nToo many wrong tries! Your IP got blocked for a limited time!\n"), 0);
+            break;
+        default:
+            printf("Client closed connection.\n");
+            break;
+    }
+
+    close(clientSocket);
     delete clientHandler;
 }
 
-Server::Server(char *mailspooldir, int port) : mailspooldir(mailspooldir), port(port), server_socket(0){
+Server::Server(char *mailspooldir, int port) :
+        mailspooldir(mailspooldir), port(port), server_socket(0), listening(true){
 }
 
 int Server::checkPort() {
@@ -54,27 +84,165 @@ void Server::listenForClients() {
     socklen_t addrlen;
     int client_socket;
     struct sockaddr_in cliaddress;
+    fd_set fds;
+
+    // Set timeout to 5 seconds
+    struct timeval timeout;
+    timeout.tv_sec = 5;
+    timeout.tv_usec = 0;
+
 
     // Listen for up to 5 clients
     listen(server_socket, 5);
 
-
     addrlen = sizeof (struct sockaddr_in);
 
-    while (1) {
-        // Wait for clients to connect to server
-        printf("Waiting for connections...\n");
-        client_socket = accept ( server_socket, (struct sockaddr *) &cliaddress, &addrlen );
+    printf("Waiting for connections...\n");
 
-        if (client_socket > 0) {
-            // New client connected, give socket to clientHandler
+    while (listening) {
+        // Reset fd_set
+        FD_ZERO(&fds);
+        FD_SET(server_socket, &fds);
+
+        // Wait for clients to connect to server (timeout after 5 seconds)
+        if(select(server_socket+1, &fds, (fd_set *) 0, (fd_set *) 0, &timeout) > 0){
+            // New client connected
+            client_socket = accept(server_socket, (struct sockaddr *) &cliaddress, &addrlen);
             printf ("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
 
-            std::thread t(clientConnect, client_socket, mailspooldir);
+            // Create new thread for client
+            std::thread t(&Server::clientConnect, this, client_socket);
             t.detach();
         }
     }
 
     // Close server socket
     close (server_socket);
+}
+
+void Server::readBlockedClients() {
+    std::stringstream filepath;
+    filepath << mailspooldir << "/blacklist.txt";
+
+    std::string ip;
+    time_t blockingtime;
+
+    std::ifstream file;
+    file.open(filepath.str(), std::ios::in);
+    if(file.is_open()){
+        while(file >> ip >> blockingtime){
+            if(blockingtime > time(0)){
+                blocked_clients[ip] = blockingtime;
+            }
+        }
+    }
+    file.close();
+}
+
+void Server::writeBlockedClients() {
+    printf("Writing blacklist...\n");
+    // Check if blocking time of some clients expired
+    checkBlockedClients();
+
+    // Write from map into file
+    std::stringstream filepath;
+    filepath << mailspooldir << "/blacklist.txt";
+
+    std::ofstream file;
+    file.open(filepath.str(), std::ios::out | std::ios::trunc);
+    if(file.is_open()){
+        for(auto it = blocked_clients.begin(); it != blocked_clients.end(); it++){
+            file << it->first << " " << it->second << std::endl;
+        }
+        printf("Write complete! Blacklist now up-to-date!\n");
+    }else{
+        perror("Could not write blocked clients into file!");
+    }
+    file.close();
+}
+
+void Server::checkBlockedClients() {
+    for(auto it = blocked_clients.begin(); it != blocked_clients.end(); it++){
+        if(it->second <= time(0)){
+            // Time expired, remove client from list
+            blocked_clients.erase(it->first);
+        }
+    }
+}
+
+std::string Server::getIpFromSocket(int socket) {
+    // Get client ip from socket
+    struct sockaddr_in addr;
+    socklen_t addr_size = sizeof(struct sockaddr_in);
+    int res = getpeername(socket, (struct sockaddr *) &addr, &addr_size);
+    if(res != 0){
+        perror("Could not get client's ip address! getpeername returned "+res);
+        return "";
+    }
+    return inet_ntoa(addr.sin_addr);
+}
+
+void Server::blockClient(int clientSocket) {
+    std::string ip = getIpFromSocket(clientSocket);
+    if(strcmp(ip.c_str(), "") == 0){
+        perror("Could not block client!");
+        return;
+    }
+
+    // Get time for when client is not blocked again
+    time_t until = time(0)+IP_BLOCK_MINUTES*60;
+
+    // Write client to list
+    blocked_clients[ip] = until;
+
+    // Write client to file
+    std::stringstream filepath;
+    filepath << mailspooldir << "/blacklist.txt";
+
+    std::ofstream file;
+    file.open(filepath.str(), std::ios::out | std::ios::app);
+    if(file.is_open()){
+        file << ip << " " << until << std::endl;
+    }else{
+        perror("Could not write client into blacklist file!");
+    }
+    file.close();
+}
+
+void Server::initBlacklist() {
+    // Read currently listed clients from file
+    readBlockedClients();
+    // Write updated list of blocked clients back to file
+    writeBlockedClients();
+}
+
+int Server::startServer() {
+    if(checkPort() != 0 || checkDir() != 0){
+        return 1;
+    }
+    if(bindSocket() != 0){
+        return 1;
+    }
+    initBlacklist();
+
+    // Listen for clients in different thread
+    std::thread listeningThread(&Server::listenForClients, this);
+
+    // Get optional input from server console
+    char buffer[MAXLINE];
+    do {
+        std::fill(buffer, buffer + sizeof(buffer), 0);
+        char *fgetret = std::fgets(buffer, MAXLINE, stdin);
+        if (fgetret != nullptr) {
+            if(strcasecmp(buffer, "write\n") == 0){
+                writeBlockedClients();
+            }else if(strcasecmp(buffer, "quit\n") == 0){
+                listening = false;
+            }
+        }
+    }while(listening);
+
+    // Join listening thread
+    printf("Exiting...");
+    listeningThread.join();
 }

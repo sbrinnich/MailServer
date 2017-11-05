@@ -1,12 +1,14 @@
 #ifndef MAILSERVER_CLIENT_HANDLER_H
 #define MAILSERVER_CLIENT_HANDLER_H
 
-#define IP_BLOCK_MINUTES 2
+#define MAXLINE 1024
+#define MAXMSG 16384
 
 class Operation;
 
 class ClientHandler {
 private:
+
     /**
      * Char pointer containing the directory path to the mailspool
      */
@@ -49,8 +51,12 @@ public:
     /**
      * Handles a client's requests
      * @param clientsocket the socket from the client
+     * @return an int representing the exit status of the client connection
+     *          0 if client executed command "quit",
+     *          1 if client tried to login too often
+     *          -1 if client closed socket
      */
-    void handleClient(int clientsocket);
+    int handleClient(int clientsocket);
 
     /**
      * Sets the username of currently logged in user to given char pointer
@@ -74,19 +80,6 @@ public:
      * @return an int containing the number of failed logins
      */
     int getFailedLogins();
-
-    /**
-     * Goes through the list of blocked IPs and deletes those, which are allowed to connect again.
-     * Also checks if currently connected client IP is allowed
-     * @return 0 if currently connected client IP is allowed or
-     *          1 if currently connected client IP is not allowed to connect (is on blacklist)
-     */
-    int checkBlockedIPs();
-
-    /**
-     * Adds current client's IP address to a blacklist to stop him from connecting again in a while
-     */
-    void blockClientIP();
 };
 
 #endif //MAILSERVER_CLIENT_HANDLER_H

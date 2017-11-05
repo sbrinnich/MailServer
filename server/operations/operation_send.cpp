@@ -70,7 +70,6 @@ int OperationSend::parseRequest() {
     }
     if(strcmp(attachment, "y") == 0){
         fileattached = true;
-        delete [] attachment;
     }
     delete [] attachment;
     return 0;

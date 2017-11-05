@@ -11,7 +11,8 @@
 #include "operations/operation_del.h"
 #include "operations/operation_login.h"
 
-ClientHandler::ClientHandler(char *mailspooldir) : mailspooldir(mailspooldir), username(nullptr), failedLogins(0) {}
+ClientHandler::ClientHandler(char *mailspooldir) :
+        mailspooldir(mailspooldir), username(nullptr), failedLogins(0) {}
 
 Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
     if(strcasecmp(buffer, "LOGIN\n") == 0){
@@ -28,11 +29,16 @@ Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
     return nullptr;
 }
 
-void ClientHandler::handleClient(int clientsocket) {
+int ClientHandler::handleClient(int clientsocket) {
     char buffer[MAXLINE];
     int status = -1;
     char msg[MAXLINE];
     while(1) {
+        // Check if login counter is too high
+        if(getFailedLogins() >= 3) {
+            return 1;
+        }
+
         // Display message to client
         switch(status){
             case 0:
@@ -59,17 +65,11 @@ void ClientHandler::handleClient(int clientsocket) {
             buffer[size] = '\0';
 
             if (strcasecmp(buffer, "QUIT\n") == 0) {
-                // Close connection to client
-                printf("Client closed connection.\n");
-                close(clientsocket);
-                return;
+                return 0;
             } else {
                 status = handleClientRequest(clientsocket, buffer);
                 if(status == -1){
-                    // Close connection to client
-                    printf("Client closed connection.\n");
-                    close(clientsocket);
-                    return;
+                    return -1;
                 }
             }
         }
@@ -139,12 +139,4 @@ void ClientHandler::incrementFailedLogins() {
 
 int ClientHandler::getFailedLogins() {
     return this->failedLogins;
-}
-
-int ClientHandler::checkBlockedIPs() {
-    return 0;
-}
-
-void ClientHandler::blockClientIP() {
-
 }

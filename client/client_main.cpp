@@ -174,7 +174,7 @@ int main (int argc, char **argv) {
             // Add newline
             printf("\n");
         }
-    }while (strcmp (buffer, "quit\n") != 0);
+    }while (strcasecmp (buffer, "quit\n") != 0);
 
     // Close connection
     printf ("Connection to server closed.\n");

@@ -29,15 +29,13 @@ int main (int argc, char** argv) {
 
     // Create server
     Server *server = new Server(directory, port);
-    if(server->checkPort() != 0 || server->checkDir() != 0){
-        return EXIT_FAILURE;
-    }
-    if(server->bindSocket() != 0){
-        return EXIT_FAILURE;
-    }
-    server->listenForClients();
+    int stat = server->startServer();
 
     delete server;
+
+    if(stat != 0){
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

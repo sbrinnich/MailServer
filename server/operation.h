@@ -12,8 +12,6 @@
 #include "client_handler.h"
 
 
-#define MAXLINE 1024
-#define MAXMSG 16384
 
 class Operation {
 protected:
