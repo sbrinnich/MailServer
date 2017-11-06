@@ -95,7 +95,7 @@ int OperationRead::doOperation() {
         }
         if(strcmp(question, "y") == 0){
             // Send downloading info to client
-            send(clientsocket, "Downloading file", strlen("Downloading file"), 0);
+            send(clientsocket, "Downloading file...", strlen("Downloading file..."), 0);
 
             // Receive OK from client
             std::fill(tmp_buf, tmp_buf + sizeof(tmp_buf), 0);
@@ -152,6 +152,7 @@ int OperationRead::doOperation() {
                     if(filesize-read_size > MAXMSG-1){
                         fileAttach.read(readBuffer, MAXMSG-1);
                         send(clientsocket, readBuffer, MAXMSG-1, 0);
+                        read_size += MAXMSG-1;
                     }else{
                         fileAttach.read(readBuffer, filesize-read_size);
                         send(clientsocket, readBuffer, filesize-read_size, 0);

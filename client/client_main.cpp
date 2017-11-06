@@ -151,6 +151,15 @@ void sendAttachment(int clientSocket){
             return;
         }
 
+        // Get size of file
+        std::streampos fsize = 0;
+        std::ifstream fileforsize;
+        fileforsize.open(filename_str.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
+        fsize = fileforsize.tellg();
+        fileforsize.close();
+        std::stringstream filesizestream;
+        filesizestream << fsize;
+
         // Remove path from input
         std::size_t found = filename_str.find_last_of("/");
         filename_str = filename_str.substr(found+1);
@@ -161,16 +170,6 @@ void sendAttachment(int clientSocket){
         std::fill(buffer, buffer + sizeof(buffer), 0);
         recv(clientSocket, buffer, BUF, 0);
 
-        // Get size of file
-        std::streampos fsize = 0;
-        std::ifstream fileforsize;
-        fileforsize.open(filename_str.c_str(), std::ios::in |std::ios::binary);
-        fsize = fileforsize.tellg();
-        fileforsize.seekg(0, std::ios::end);
-        fsize = fileforsize.tellg() - fsize;
-        fileforsize.close();
-        std::stringstream filesizestream;
-        filesizestream << fsize;
         // Send size as char array
         send(clientSocket, filesizestream.str().c_str(), strlen(filesizestream.str().c_str()), 0);
 
@@ -189,6 +188,7 @@ void sendAttachment(int clientSocket){
             if(fsize-read_size > BUF-1){
                 file.read(buffer, BUF-1);
                 send(clientSocket, buffer, BUF-1, 0);
+                read_size += BUF-1;
             }else{
                 file.read(buffer, fsize-read_size);
                 send(clientSocket, buffer, fsize-read_size, 0);
@@ -269,6 +269,7 @@ void recvAttachment(int clientSocket){
             if(filesize-read_size > BUF-1){
                 recv(clientSocket, readBuffer, BUF-1, 0);
                 attachFile.write(readBuffer, BUF-1);
+                read_size += BUF-1;
             }else{
                 recv(clientSocket, readBuffer, filesize-read_size, 0);
                 attachFile.write(readBuffer, filesize-read_size);
@@ -284,35 +285,4 @@ void recvAttachment(int clientSocket){
 
     delete[] buffer;
     delete[] filename;
-    /*
-    //send
-    send(clientSocket, "Ok", strlen("Ok"), 0);
-    //get filename
-    auto * filename = new char [BUF];
-    recv(clientSocket,filename,BUF-1, 0);
-
-    send(clientSocket, "Creating file...", strlen("Creating file..."), 0);
-
-    //get filesize
-    char * FileSizeChar = new char[BUF];
-    recv(clientSocket,FileSizeChar,BUF-1, 0);
-    char *end;
-    auto FileSize = static_cast<size_t>(strtol(FileSizeChar,&end,10));
-
-    FILE *file = fopen(filename, "w");//creates empty file to write into
-    char* copyhelper;
-    long SizeCheck = 0;
-    copyhelper = (char*)malloc(FileSize + 1);
-    while(SizeCheck < FileSize){
-        ssize_t Received = recv(clientSocket, copyhelper, FileSize, 0);
-        ssize_t  Written = fwrite(copyhelper, sizeof(char), static_cast<size_t>(Received), file);
-        SizeCheck += Written;
-        for(int i = 0; i < Written; i++){
-            if(copyhelper[i] == '\n'){
-                SizeCheck += 1;//because \n is 2 byte
-            }
-        }
-    }
-    fclose(file);
-    free(copyhelper);*/
 }

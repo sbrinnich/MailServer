@@ -131,7 +131,7 @@ int OperationSend::sendFileAttachment(std::string filename) {
     // Save file
     name = filename + "file";
     std::ofstream file;
-    file.open(name.c_str());
+    file.open(name.c_str(), std::ios::out | std::ios::binary);
     if(!file.is_open()){
         perror("Could not save attachment!");
 
@@ -152,6 +152,7 @@ int OperationSend::sendFileAttachment(std::string filename) {
         if(filesize-read_size > MAXMSG-1){
             recv(clientsocket, readBuffer, MAXMSG-1, 0);
             file.write(readBuffer, MAXMSG-1);
+            read_size += MAXMSG-1;
         }else{
             recv(clientsocket, readBuffer, filesize-read_size, 0);
             file.write(readBuffer, filesize-read_size);
