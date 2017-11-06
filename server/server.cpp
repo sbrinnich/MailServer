@@ -52,7 +52,20 @@ int Server::checkDir() {
     }
     DIR* dir = opendir(mailspooldir);
     if(!dir){
-        // TODO ask if directory should be created
+        // Ask if directory should be created
+        printf("Directory does not exist! Do you want to create it? (y/n) ");
+        char *buffer = new char[MAXLINE];
+        char *fgetret = std::fgets(buffer, MAXLINE, stdin);
+        if (fgetret != nullptr && strcmp(buffer, "y\n") == 0) {
+            delete[] buffer;
+            if(mkdir(mailspooldir, 0755) != 0){
+                printf("Directory could not be created!\n");
+                return 1;
+            }
+            printf("Directory created!\n");
+            return 0;
+        }
+        delete[] buffer;
         return 1;
     }
     closedir(dir);
@@ -243,7 +256,7 @@ int Server::startServer() {
     }while(listening);
 
     // Join listening thread
-    printf("Exiting...");
+    printf("Exiting...\n");
     listeningThread.join();
     return 0;
 }

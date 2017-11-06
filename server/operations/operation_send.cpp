@@ -113,9 +113,9 @@ int OperationSend::sendFileAttachment(std::string filename) {
     }
 
     // Save fileinfo
-    std::string name = filename + "info";
+    std::string infoname = filename + "info";
     std::ofstream fileinfo;
-    fileinfo.open(name.c_str());
+    fileinfo.open(infoname.c_str());
     if(!fileinfo.is_open()){
         perror("Could not save attachment info!");
 
@@ -129,7 +129,7 @@ int OperationSend::sendFileAttachment(std::string filename) {
     fileinfo.close();
 
     // Save file
-    name = filename + "file";
+    std::string name = filename + "file";
     std::ofstream file;
     file.open(name.c_str(), std::ios::out | std::ios::binary);
     if(!file.is_open()){
@@ -137,7 +137,11 @@ int OperationSend::sendFileAttachment(std::string filename) {
 
         delete[] FileSizeChar;
         delete[] localfile;
-        // TODO delete fileinfo file
+
+        // Delete fileinfo file
+        if(std::remove(infoname.c_str()) != 0){
+            perror("Could not delete unused attachment info file");
+        }
         return 1;
     }
 
@@ -191,7 +195,7 @@ int OperationSend::doOperation() {
     DIR* dir = opendir(dirpath.str().c_str());
     if(!dir){
         // Create directory if it doesn't exist yet
-        mkdir(dirpath.str().c_str(), 0777); // TODO change 0777
+        mkdir(dirpath.str().c_str(), 0755);
     }
     closedir(dir);
 
