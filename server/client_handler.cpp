@@ -126,7 +126,8 @@ int ClientHandler::handleClientRequest(int clientsocket, char* request_msg) {
 }
 
 void ClientHandler::setUsername(char *username) {
-    this->username = username;
+    this->username = new char[9];
+    strcpy(this->username, username);
 }
 
 char* ClientHandler::getUsername() {

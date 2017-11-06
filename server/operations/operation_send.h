@@ -8,7 +8,7 @@ class OperationSend : public Operation {
 
 private:
     char *receiver, *subject, *content;
-    bool fileattached = false;
+    bool fileattached;
     int sendFileAttachment(std::string filename);
 
 public:

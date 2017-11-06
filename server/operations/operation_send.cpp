@@ -1,4 +1,5 @@
 #include <sys/time.h>
+#include <thread>
 
 #include "operation_send.h"
 
@@ -61,7 +62,7 @@ int OperationSend::parseRequest() {
     cnt_stream.str().copy(content, len, 0);
     content[len] = '\0';
 
-    char * attachment = new char [8];
+    char* attachment = new char [8];
     send(clientsocket, "Add file attachment?(y/n) ", strlen("Add file attachment?(y/n) "), 0);
     ret = getClientInput(8, &attachment);
     if(ret == 1 || ret == -1){
@@ -70,7 +71,10 @@ int OperationSend::parseRequest() {
     }
     if(strcmp(attachment, "y") == 0){
         fileattached = true;
+    }else{
+        fileattached = false;
     }
+
     delete [] attachment;
     return 0;
 }
@@ -79,48 +83,84 @@ int OperationSend::parseRequest() {
 int OperationSend::sendFileAttachment(std::string filename) {
     send(clientsocket, "Which file do you want to add? ", strlen("Which file do you want to add? "), 0);
 
-    auto * localfile = new char [MAXLINE];
+    char* localfile = new char[MAXLINE];
     int ret = getClientInput(MAXLINE, &localfile);
     if (ret == 1 || ret == -1) {
         delete[] localfile;
         return ret;
     }
 
-    send(clientsocket, "Opening file...", strlen("Opening file..."), 0);
+    // Send OK to client
+    send(clientsocket, "OK", strlen("OK"), 0);
 
-    //get filesize from client
-    char * FileSizeChar = new char[MAXLINE];
+
+    // Get filesize from client
+    char* FileSizeChar = new char[MAXLINE];
     ret = getClientInput(MAXLINE, &FileSizeChar);
-    char *end;
-    auto FileSize = static_cast<size_t>(strtol(FileSizeChar,&end,10));
     if (ret == 1 || ret == -1) {
         delete[] FileSizeChar;
+        delete[] localfile;
         return ret;
     }
-
-    //adds the attachment
-    filename += "_attachment";
-
-    //convert string to char array
-    const char *filenamefin = filename.c_str();
-
-    //save file at server
-    FILE *file = fopen(filenamefin, "w");//creates empty file to write into
-    char* copyhelper;
-    long SizeCheck = 0;
-    copyhelper = (char*)malloc(FileSize + 1);
-    while(SizeCheck < FileSize){
-        ssize_t Received = recv(clientsocket, copyhelper, FileSize, 0);
-        ssize_t  Written = fwrite(copyhelper, sizeof(char), static_cast<size_t>(Received), file);
-        SizeCheck += Written;
-        for(int i = 0; i < Written; i++){
-            if(copyhelper[i] == '\n'){
-                SizeCheck += 1;//because \n is 2 byte
-            }
-        }
+    long filesize = 0;
+    std::stringstream filesizestream(FileSizeChar);
+    filesizestream >> filesize;
+    if(filesizestream.fail()){
+        perror("Could not parse filesize in sending attachment!");
+        delete[] FileSizeChar;
+        delete[] localfile;
+        return 1;
     }
-    fclose(file);
-    free(copyhelper);
+
+    // Save fileinfo
+    std::string name = filename + "info";
+    std::ofstream fileinfo;
+    fileinfo.open(name.c_str());
+    if(!fileinfo.is_open()){
+        perror("Could not save attachment info!");
+
+        delete[] FileSizeChar;
+        delete[] localfile;
+        return 1;
+    }
+
+    fileinfo << localfile << std::endl;
+    fileinfo << FileSizeChar << std::endl;
+    fileinfo.close();
+
+    // Save file
+    name = filename + "file";
+    std::ofstream file;
+    file.open(name.c_str());
+    if(!file.is_open()){
+        perror("Could not save attachment!");
+
+        delete[] FileSizeChar;
+        delete[] localfile;
+        // TODO delete fileinfo file
+        return 1;
+    }
+
+    char* readBuffer = new char[MAXMSG];
+    long read_size = 0;
+    do{
+        // Send OK to client
+        send(clientsocket, "OK", strlen("OK"), 0);
+        std::fill(readBuffer, readBuffer + sizeof(readBuffer), 0);
+
+        // Receive from client
+        if(filesize-read_size > MAXMSG-1){
+            recv(clientsocket, readBuffer, MAXMSG-1, 0);
+            file.write(readBuffer, MAXMSG-1);
+        }else{
+            recv(clientsocket, readBuffer, filesize-read_size, 0);
+            file.write(readBuffer, filesize-read_size);
+            break;
+        }
+    }while(true);
+
+    file.close();
+
     return 0;
 
 }
@@ -139,7 +179,8 @@ int OperationSend::doOperation() {
     struct timeval tp;
     gettimeofday(&tp, NULL);
     long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-    std::string filename = std::to_string(ms);
+    std::stringstream filename;
+    filename << std::to_string(ms) << "_" << std::this_thread::get_id();
 
     std::stringstream dirpath;
 
@@ -154,11 +195,12 @@ int OperationSend::doOperation() {
     closedir(dir);
 
     // Add filename to path
-    dirpath << "/" << filename << ".txt";
+    dirpath << "/" << filename.str();
 
     // Open file and write data into it
+    std::string filepath = dirpath.str()+".txt";
     std::ofstream file;
-    file.open(dirpath.str().c_str(), std::ios::out);
+    file.open(filepath.c_str(), std::ios::out);
     file << "Sender: " << clientHandler->getUsername() << std::endl;
     file << "Subject: " << subject << std::endl;
     file << "Content: " << content << std::endl;
@@ -167,16 +209,12 @@ int OperationSend::doOperation() {
 
     //handle attachment
     if(fileattached){
-        std::stringstream attachment;
-        attachment << mailspooldir << "/" << receiver;
-        dir = opendir(attachment.str().c_str());
-        int ret = sendFileAttachment(filename);
-        closedir(dir);
+        filepath = dirpath.str()+"_attach";
+        int ret = sendFileAttachment(filepath);
         if(ret == 1 || ret == -1){
             return ret;
         }
     }
-
 
     return 0;
 }

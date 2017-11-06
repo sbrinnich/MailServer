@@ -245,4 +245,5 @@ int Server::startServer() {
     // Join listening thread
     printf("Exiting...");
     listeningThread.join();
+    return 0;
 }

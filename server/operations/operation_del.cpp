@@ -39,6 +39,7 @@ int OperationDel::doOperation() {
         return 1;
     }
 
+    // Get filepath for mail file
     std::stringstream filepath;
     filepath << mailspooldir << "/" << clientHandler->getUsername();
     char* filename = getNthMailFilename(filepath.str().c_str(), messagenr);
@@ -47,33 +48,21 @@ int OperationDel::doOperation() {
     }
     filepath << "/" << filename;
 
-    std::string path = filepath.str();
-    char* filenamewithpath = new char[path.length() + 1];
-    std::copy(path.c_str(), path.c_str() + path.length() + 1, filenamewithpath);
+    // Get filepath for mail attachment if exists
+    std::string fname = filename;
+    fname.erase(fname.length()-4);
 
+    std::stringstream filepathAttachInfo;
+    filepathAttachInfo << mailspooldir << "/" << clientHandler->getUsername() << "/" << fname << "_attachinfo";
+    std::stringstream filepathAttachFile;
+    filepathAttachFile << mailspooldir << "/" << clientHandler->getUsername() << "/" << fname << "_attachfile";
 
-    //handle attachment if exists
-    std::string filenamestr(filenamewithpath);
-    //get rid of .txt
-    long extension = filenamestr.find(".txt");
-    if(extension != std::string::npos){
-        filenamestr.resize(extension);
-    }
-    filenamestr += "_attachment";
-    std::ifstream infile(filenamestr);
-    bool ret = infile.good();
-    if(ret){
-        if(std::remove(filenamestr.c_str()) == 0){
-            return 0;
-        }else{
-            perror( "Error deleting attachment: No such file or directory.\n" );
-            return 1;
+    // Remove file(s)
+    if(std::remove(filepath.str().c_str()) == 0){
+        // If attachinfo can be deleted, also delete attachfile
+        if(std::remove(filepathAttachInfo.str().c_str()) == 0){
+            std::remove(filepathAttachFile.str().c_str());
         }
-    }
-
-    if(std::remove(filenamewithpath) == 0){
-        send(clientsocket, "Email was successfully deleted.\n",
-             strlen("Email was successfully deleted.\n"), 0);
         return 0;
     }else{
         perror( "Error deleting file: No such file or directory.\n" );

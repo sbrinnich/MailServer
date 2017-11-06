@@ -30,21 +30,17 @@ int OperationList::doOperation() {
         char *sender, *subject, *content;
         sender = new char[9];
         subject = new char[81];
-        content = new char[MAXLINE];
+        content = new char[MAXMSG];
         int parsing;
         while((ent = readdir(dir)) != NULL){
-            if(strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
+            if(strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0
+                    && std::string(ent->d_name).find("_attach") == std::string::npos) {
                 std::stringstream filepath;
                 filepath << mailspooldir << "/" << clientHandler->getUsername() << "/" << ent->d_name;
                 parsing = parseMailFile(filepath.str().c_str(), &sender, &subject, &content);
                 if (parsing == 0) {
-                    //filter out attachments and list them too
-                    if(filepath.str().find("attachment") != -1){
-                        mailsubjects << "#" << mailcount << " has a file attachment." << std::endl;
-                    }else{
-                        mailcount++;
-                        mailsubjects << "#" << mailcount << ": " << subject << std::endl;
-                    }
+                    mailcount++;
+                    mailsubjects << "#" << mailcount << ": " << subject << std::endl;
                 } else {
                     perror("MailFile Parse Error in LIST");
                 }
@@ -60,6 +56,11 @@ int OperationList::doOperation() {
     out << "Found " << mailcount << " emails!\n" << mailsubjects.str();
 
     send(clientsocket, out.str().c_str(), strlen(out.str().c_str()), 0);
+
+    // Receive OK from client
+    char* buf = new char[10];
+    recv(clientsocket, buf, 10, 0);
+    delete[] buf;
 
     return 0;
 }

@@ -9,12 +9,17 @@
 #include <sstream>
 #include <termios.h>
 #include <sys/stat.h>
-#include "../server/operation.h"
+#include <fstream>
+#include <iostream>
 
 #define BUF 16384
 
+void showInput(bool show);
+void sendAttachment(int clientSocket);
+void recvAttachment(int clientSocket);
+
 int main (int argc, char **argv) {
-    int create_socket;
+    int clientSocket;
     char buffer[BUF];
     std::fill(buffer, buffer + sizeof(buffer), 0);
     struct sockaddr_in address;
@@ -38,7 +43,7 @@ int main (int argc, char **argv) {
     }
 
     // Create socket
-    if ((create_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
+    if ((clientSocket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
     {
         perror("Socket error");
         return EXIT_FAILURE;
@@ -47,11 +52,11 @@ int main (int argc, char **argv) {
     // Define address and port of remote server
     memset(&address,0,sizeof(address));
     address.sin_family = AF_INET;
-    address.sin_port = htons (port);
+    address.sin_port = htons(port);
     inet_aton (argv[1], &address.sin_addr);
 
     // Try to connect to remote server
-    if (connect ( create_socket, (struct sockaddr *) &address, sizeof (address)) == 0) {
+    if (connect(clientSocket, (struct sockaddr *) &address, sizeof (address)) == 0) {
         printf ("Connection with server (%s) established\n", inet_ntoa (address.sin_addr));
         std::fill(buffer, buffer + sizeof(buffer), 0);
     }else{
@@ -65,120 +70,249 @@ int main (int argc, char **argv) {
         std::fill(buffer, buffer + sizeof(buffer), 0);
 
         // Receive message from server
-        size = recv(create_socket,buffer,BUF-1, 0);
+        size = recv(clientSocket,buffer,BUF-1, 0);
         if (size>0)
         {
             buffer[size]= '\0';
             printf("%s",buffer);
         }
 
-        if(strcmp(buffer, "Which file do you want to add? ") == 0){
-            char *fgetret = std::fgets(buffer, BUF, stdin);
-            if (fgetret != nullptr) {
-                //send filename
-                send(create_socket, buffer, strlen(buffer), 0);
-
-                //get size of file
-                struct stat st{};
-                stat(buffer, &st);
-                long filesize = st.st_size;                 //long fileSize = getFileSize(file);
-                auto * const filesizechar = reinterpret_cast<char * const>(&filesize);//send as char array so that get client input works
-                send(create_socket, filesizechar, strlen(filesizechar), 0);
-
-                //open file
-                FILE *file;
-                // Open the file in binary mode using the "rb" format string
-                // This also checks if the file exists and/or can be opened for reading correctly
-                if ((file = fopen(buffer, "rb")) == nullptr){
-                    perror("Could not open specified file\n");
-                } else{
-                    printf("File opened successfully\n");
+        if(strstr(buffer, "Which file") != nullptr){
+            // Clear buffer
+            std::fill(buffer, buffer + sizeof(buffer), 0);
+            sendAttachment(clientSocket);
+        }else if(strstr(buffer, "Downloading file") != nullptr){
+            // Clear buffer
+            std::fill(buffer, buffer + sizeof(buffer), 0);
+            recvAttachment(clientSocket);
+        }else{
+            if(strstr(buffer, "Found ") != nullptr || strstr(buffer, "Reading Mail") != nullptr){
+                // On command list or read, read again to receive next message
+                send(clientSocket, "OK", strlen("OK"), 0);
+            }else {
+                bool pwd = (strstr(buffer, "Password") != nullptr);
+                if (pwd) {
+                    // Hide password input
+                    showInput(false);
                 }
+                // Clear buffer
+                std::fill(buffer, buffer + sizeof(buffer), 0);
 
-                // read file and send file to server
-                long SizeCheck = 0;
-                auto *CopyHelper = (char*)malloc(1024);
-                if(filesize > 1024){
-                    while(SizeCheck < filesize){
-                        size_t Read = fread(CopyHelper, 1024, 1, file);//gibt anzahl speicherobjecte zurück
-                        ssize_t Sent = send(create_socket, CopyHelper, Read, 0);
-                        SizeCheck += Sent;
-                        for(int i = 0; i < Sent; i++){
-                            if(CopyHelper[i] == '\n'){
-                                SizeCheck += 1;//because \n is 2 byte
-                            }
-                        }
-                    }
+                // Read message from stdin and send to server
+                char *fgetret = std::fgets(buffer, BUF, stdin);
+                if (fgetret != nullptr) {
+                    send(clientSocket, buffer, strlen(buffer), 0);
                 }
-                fclose(file);
-                free(CopyHelper);
-            }
-        }
-
-        if(strcmp(buffer, "Downloading file...\n") == 0){
-            //send
-            send(create_socket, "Ok", strlen("Ok"), 0);
-            //get filename
-            auto * filename = new char [MAXLINE];
-            recv(create_socket,filename,BUF-1, 0);
-
-            send(create_socket, "Creating file...", strlen("Creating file..."), 0);
-
-            //get filesize
-            char * FileSizeChar = new char[MAXLINE];
-            recv(create_socket,FileSizeChar,BUF-1, 0);
-            char *end;
-            auto FileSize = static_cast<size_t>(strtol(FileSizeChar,&end,10));
-
-            FILE *file = fopen(filename, "w");//creates empty file to write into
-            char* copyhelper;
-            long SizeCheck = 0;
-            copyhelper = (char*)malloc(FileSize + 1);
-            while(SizeCheck < FileSize){
-                ssize_t Received = recv(create_socket, copyhelper, FileSize, 0);
-                ssize_t  Written = fwrite(copyhelper, sizeof(char), static_cast<size_t>(Received), file);
-                SizeCheck += Written;
-                for(int i = 0; i < Written; i++){
-                    if(copyhelper[i] == '\n'){
-                        SizeCheck += 1;//because \n is 2 byte
-                    }
+                if (pwd) {
+                    // Show input again
+                    showInput(true);
+                    printf("\n");
                 }
             }
-            fclose(file);
-            free(copyhelper);
-        }
-
-        bool pwd = (strstr(buffer, "Password") != nullptr);
-        if(pwd){
-            // Hide password input
-            termios stty;
-            tcgetattr(STDIN_FILENO, &stty);
-            stty.c_lflag &= ~ECHO;
-            tcsetattr(STDIN_FILENO, TCSANOW, &stty);
-        }
-        // Clear buffer
-        std::fill(buffer, buffer + sizeof(buffer), 0);
-
-        // Read message from stdin and send to server
-        char *fgetret = std::fgets(buffer, BUF, stdin);
-        if (fgetret != nullptr) {
-            send(create_socket, buffer, strlen(buffer), 0);
-        }
-        if(pwd){
-            // Show input again
-            termios stty;
-            tcgetattr(STDIN_FILENO, &stty);
-            stty.c_lflag |= ECHO;
-            tcsetattr(STDIN_FILENO, TCSANOW, &stty);
-
-            // Add newline
-            printf("\n");
         }
     }while (strcasecmp (buffer, "quit\n") != 0);
 
     // Close connection
     printf ("Connection to server closed.\n");
-    close (create_socket);
+    close (clientSocket);
 
     return EXIT_SUCCESS;
+}
+
+void showInput(bool show){
+    termios stty;
+    tcgetattr(STDIN_FILENO, &stty);
+    if(show){
+        stty.c_lflag |= ECHO;
+    }else{
+        stty.c_lflag &= ~ECHO;
+    }
+    tcsetattr(STDIN_FILENO, TCSANOW, &stty);
+}
+
+void sendAttachment(int clientSocket){
+    // Read filename
+    char* buffer = new char[BUF];
+    char *fgetret = std::fgets(buffer, BUF, stdin);
+    if (fgetret != nullptr) {
+        char* filename = new char[BUF];
+        strcpy(filename, buffer);
+        std::string filename_str = filename;
+        filename_str.erase(filename_str.length()-1);
+
+        // Check if file can be opened
+        std::ifstream file;
+        file.open(filename_str.c_str(), std::ios::in | std::ios::binary);
+        if(!file.is_open()){
+            perror("Could not open specified file\n");
+            send(clientSocket, "", strlen(""), 0);
+            delete[] buffer;
+            delete[] filename;
+            return;
+        }
+
+        // Remove path from input
+        std::size_t found = filename_str.find_last_of("/");
+        filename_str = filename_str.substr(found+1);
+
+        // Send filename
+        send(clientSocket, filename_str.c_str(), strlen(filename_str.c_str()), 0);
+        // Receive OK from server
+        std::fill(buffer, buffer + sizeof(buffer), 0);
+        recv(clientSocket, buffer, BUF, 0);
+
+        // Get size of file
+        std::streampos fsize = 0;
+        std::ifstream fileforsize;
+        fileforsize.open(filename_str.c_str(), std::ios::in |std::ios::binary);
+        fsize = fileforsize.tellg();
+        fileforsize.seekg(0, std::ios::end);
+        fsize = fileforsize.tellg() - fsize;
+        fileforsize.close();
+        std::stringstream filesizestream;
+        filesizestream << fsize;
+        // Send size as char array
+        send(clientSocket, filesizestream.str().c_str(), strlen(filesizestream.str().c_str()), 0);
+
+        // Read file and send to server
+        long read_size = 0;
+        if(fsize <= 0){
+            file.close();
+            delete[] buffer;
+            delete[] filename;
+            return;
+        }
+        do {
+            // Receive OK from server
+            std::fill(buffer, buffer + sizeof(buffer), 0);
+            recv(clientSocket, buffer, BUF, 0);
+            if(fsize-read_size > BUF-1){
+                file.read(buffer, BUF-1);
+                send(clientSocket, buffer, BUF-1, 0);
+            }else{
+                file.read(buffer, fsize-read_size);
+                send(clientSocket, buffer, fsize-read_size, 0);
+                break;
+            }
+        }while(true);
+
+        // Close file
+        file.close();
+
+        delete[] filename;
+    }
+    delete[] buffer;
+}
+
+void recvAttachment(int clientSocket){
+    // Send OK to server
+    send(clientSocket, "OK", strlen("OK"), 0);
+
+    char *buffer = new char[BUF];
+    char *filename = new char[BUF];
+    std::fill(buffer, buffer + sizeof(buffer), 0);
+    std::fill(filename, filename + sizeof(filename), 0);
+
+    // Receive filename from server
+    size_t size = recv(clientSocket, filename, BUF, 0);
+    if(size>0){
+        filename[size]= '\0';
+    }else{
+        perror("Could not receive filename of attachment from server");
+        delete[] buffer;
+        delete[] filename;
+        return;
+    }
+
+    // Send OK to server
+    send(clientSocket, "OK", strlen("OK"), 0);
+
+    // Receive filesize from server
+    size = recv(clientSocket, buffer, BUF, 0);
+    if(size>0){
+        buffer[size]= '\0';
+    }else{
+        perror("Could not receive filesize of attachment from server");
+        delete[] buffer;
+        delete[] filename;
+        return;
+    }
+
+    // Parse filesize
+    long filesize = 0;
+    std::stringstream sizeStream(buffer);
+    sizeStream >> filesize;
+    if(sizeStream.fail()){
+        perror("Could not parse attachment filesize");
+        delete[] buffer;
+        delete[] filename;
+        return;
+    }
+
+    // Get full filepath
+    std::stringstream filepath;
+    filepath << "attachment_" << filename;
+
+    // Open file for writing
+    std::ofstream attachFile;
+    attachFile.open(filepath.str().c_str(), std::ios::binary);
+    if(attachFile.is_open()){
+        // Receive from server and write to file
+        char* readBuffer = new char[BUF];
+        long read_size = 0;
+        do{
+            // Send OK to server
+            send(clientSocket, "OK", strlen("OK"), 0);
+            std::fill(readBuffer, readBuffer + sizeof(readBuffer), 0);
+
+            // Receive from server and write to file
+            if(filesize-read_size > BUF-1){
+                recv(clientSocket, readBuffer, BUF-1, 0);
+                attachFile.write(readBuffer, BUF-1);
+            }else{
+                recv(clientSocket, readBuffer, filesize-read_size, 0);
+                attachFile.write(readBuffer, filesize-read_size);
+                break;
+            }
+        }while(true);
+
+        attachFile.close();
+        delete[] readBuffer;
+    }else{
+        perror("Could not write attachment file");
+    }
+
+    delete[] buffer;
+    delete[] filename;
+    /*
+    //send
+    send(clientSocket, "Ok", strlen("Ok"), 0);
+    //get filename
+    auto * filename = new char [BUF];
+    recv(clientSocket,filename,BUF-1, 0);
+
+    send(clientSocket, "Creating file...", strlen("Creating file..."), 0);
+
+    //get filesize
+    char * FileSizeChar = new char[BUF];
+    recv(clientSocket,FileSizeChar,BUF-1, 0);
+    char *end;
+    auto FileSize = static_cast<size_t>(strtol(FileSizeChar,&end,10));
+
+    FILE *file = fopen(filename, "w");//creates empty file to write into
+    char* copyhelper;
+    long SizeCheck = 0;
+    copyhelper = (char*)malloc(FileSize + 1);
+    while(SizeCheck < FileSize){
+        ssize_t Received = recv(clientSocket, copyhelper, FileSize, 0);
+        ssize_t  Written = fwrite(copyhelper, sizeof(char), static_cast<size_t>(Received), file);
+        SizeCheck += Written;
+        for(int i = 0; i < Written; i++){
+            if(copyhelper[i] == '\n'){
+                SizeCheck += 1;//because \n is 2 byte
+            }
+        }
+    }
+    fclose(file);
+    free(copyhelper);*/
 }
