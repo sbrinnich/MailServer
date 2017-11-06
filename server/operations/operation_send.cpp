@@ -90,8 +90,8 @@ int OperationSend::sendFileAttachment(std::string filename) {
         return ret;
     }
 
-    // Send OK to client
-    send(clientsocket, "OK", strlen("OK"), 0);
+    // Send Press enter to continue to client
+    send(clientsocket, "Press enter to continue", strlen("Press enter to continue"), 0);
 
 
     // Get filesize from client
@@ -217,6 +217,7 @@ int OperationSend::doOperation() {
         filepath = dirpath.str()+"_attach";
         int ret = sendFileAttachment(filepath);
         if(ret == 1 || ret == -1){
+            send(clientsocket, "", strlen(""), 0);
             return ret;
         }
     }

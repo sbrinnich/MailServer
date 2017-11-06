@@ -145,7 +145,7 @@ void sendAttachment(int clientSocket){
         file.open(filename_str.c_str(), std::ios::in | std::ios::binary);
         if(!file.is_open()){
             perror("Could not open specified file\n");
-            send(clientSocket, "", strlen(""), 0);
+            send(clientSocket, "Error", strlen("Error"), 0);
             delete[] buffer;
             delete[] filename;
             return;

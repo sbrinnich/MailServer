@@ -101,7 +101,6 @@ int OperationLogin::doOperation() {
     free(attribs[1]);
 
     ldap_unbind(ld);
-
     clientHandler->setUsername(username);
     return 0;
 }
