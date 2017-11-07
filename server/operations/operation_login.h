@@ -18,6 +18,12 @@ private:
     char *password;
 
 public:
+    /**
+     * Creates a new instance of a login-operation
+     * @param clientsocket the socket of the client requesting the operation
+     * @param mailspooldir the directory where all the mails are saved to
+     * @param clientHandler an instance to the ClientHandler handling this client's requests
+     */
     OperationLogin(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
     ~OperationLogin();
     int doPreparation() override;

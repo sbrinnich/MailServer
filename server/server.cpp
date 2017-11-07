@@ -1,20 +1,25 @@
 #include "server.h"
 
 void Server::clientConnect(int clientSocket){
-    // Check if client is blocked
-    auto it = blocked_clients.find(getIpFromSocket(clientSocket));
-    if(it != blocked_clients.end()){
-        if(it->second > time(0)){
-            printf("Blocked client tried to connect.\n");
-            send(clientSocket, "Your IP is blocked for a limited time!\n",
-                 strlen("Your IP is blocked for a limited time!\n"), 0);
-            close(clientSocket);
-            return;
-        }else{
-            // Blocked time ran out, client allowed to connect again
-            blocked_clients.erase(it->first);
+    // Lock map
+    {
+        std::lock_guard<std::mutex> lock(blacklist_map_mutex);
+
+        // Check if client is blocked
+        auto it = blocked_clients.find(getIpFromSocket(clientSocket));
+        if (it != blocked_clients.end()) {
+            if (it->second > time(0)) {
+                printf("Blocked client tried to connect.\n");
+                send(clientSocket, "Your IP is blocked for a limited time!\n",
+                     strlen("Your IP is blocked for a limited time!\n"), 0);
+                close(clientSocket);
+                return;
+            } else {
+                // Blocked time ran out, client allowed to connect again
+                blocked_clients.erase(it->first);
+            }
         }
-    }
+    } // Release lock
 
     ClientHandler* clientHandler = new ClientHandler(mailspooldir);
     int status = clientHandler->handleClient(clientSocket);
@@ -85,7 +90,7 @@ int Server::bindSocket() {
     address.sin_port = htons ((uint16_t) port);
 
     // Bind server socket
-    if (bind ( server_socket, (struct sockaddr *) &address, sizeof (address)) != 0) {
+    if (bind(server_socket, (struct sockaddr *) &address, sizeof(address)) != 0) {
         perror("bind error");
         return 1;
     }
@@ -121,7 +126,7 @@ void Server::listenForClients() {
         if(select(server_socket+1, &fds, (fd_set *) 0, (fd_set *) 0, &timeout) > 0){
             // New client connected
             client_socket = accept(server_socket, (struct sockaddr *) &cliaddress, &addrlen);
-            printf ("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
+            printf("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
 
             // Create new thread for client
             std::thread t(&Server::clientConnect, this, client_socket);
@@ -141,6 +146,9 @@ void Server::readBlockedClients() {
     time_t blockingtime;
 
     std::ifstream file;
+
+    // Lock file
+    std::lock_guard<std::mutex> lock(blacklist_file_mutex);
     file.open(filepath.str(), std::ios::in);
     if(file.is_open()){
         while(file >> ip >> blockingtime){
@@ -162,6 +170,10 @@ void Server::writeBlockedClients() {
     filepath << mailspooldir << "/blacklist.txt";
 
     std::ofstream file;
+
+    // Lock file
+    std::lock_guard<std::mutex> lock(blacklist_file_mutex);
+
     file.open(filepath.str(), std::ios::out | std::ios::trunc);
     if(file.is_open()){
         for(auto it = blocked_clients.begin(); it != blocked_clients.end(); it++){
@@ -175,6 +187,8 @@ void Server::writeBlockedClients() {
 }
 
 void Server::checkBlockedClients() {
+    // Lock map
+    std::lock_guard<std::mutex> lock(blacklist_map_mutex);
     for(auto it = blocked_clients.begin(); it != blocked_clients.end(); it++){
         if(it->second <= time(0)){
             // Time expired, remove client from list
@@ -206,13 +220,20 @@ void Server::blockClient(int clientSocket) {
     time_t until = time(0)+IP_BLOCK_MINUTES*60;
 
     // Write client to list
-    blocked_clients[ip] = until;
+    {
+        std::lock_guard<std::mutex> lock(blacklist_map_mutex);
+        blocked_clients[ip] = until;
+    } // Release lock
 
     // Write client to file
     std::stringstream filepath;
     filepath << mailspooldir << "/blacklist.txt";
 
     std::ofstream file;
+
+    // Lock file
+    std::lock_guard<std::mutex> lock(blacklist_file_mutex);
+
     file.open(filepath.str(), std::ios::out | std::ios::app);
     if(file.is_open()){
         file << ip << " " << until << std::endl;

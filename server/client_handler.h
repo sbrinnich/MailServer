@@ -1,7 +1,9 @@
 #ifndef MAILSERVER_CLIENT_HANDLER_H
 #define MAILSERVER_CLIENT_HANDLER_H
 
+// Maximum number of characters for one line
 #define MAXLINE 1024
+// Maximum number of characters for a single mail's content
 #define MAXMSG 16384
 
 class Operation;
@@ -9,19 +11,13 @@ class Operation;
 class ClientHandler {
 private:
 
-    /**
-     * Char pointer containing the directory path to the mailspool
-     */
+    // Char pointer containing the directory path to the mailspool
     char* mailspooldir;
 
-    /**
-     * Char pointer containing the username of the user currently logged in (or nullptr, if user is not logged in)
-     */
+    // Char pointer containing the username of the user currently logged in (or nullptr, if user is not logged in)
     char* username;
 
-    /**
-     * Integer containing the number of failed logins
-     */
+    // Integer containing the number of failed logins
     int failedLogins;
 
     /**
