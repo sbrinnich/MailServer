@@ -1,10 +1,7 @@
 #ifndef MAILSERVER_CLIENT_HANDLER_H
 #define MAILSERVER_CLIENT_HANDLER_H
 
-// Maximum number of characters for one line
-#define MAXLINE 1024
-// Maximum number of characters for a single mail's content
-#define MAXMSG 16384
+#include "../definitions.h"
 
 class Operation;
 

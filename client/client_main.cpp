@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iostream>
 
-#define BUF 16384
+#include "../definitions.h"
 
 void showInput(bool show);
 void sendAttachment(int clientSocket);
@@ -19,7 +19,7 @@ void recvAttachment(int clientSocket);
 
 int main (int argc, char **argv) {
     int clientSocket;
-    char buffer[BUF];
+    char buffer[MAXMSG];
     std::fill(buffer, buffer + sizeof(buffer), 0);
     struct sockaddr_in address;
     int size;
@@ -69,7 +69,7 @@ int main (int argc, char **argv) {
         std::fill(buffer, buffer + sizeof(buffer), 0);
 
         // Receive message from server
-        size = recv(clientSocket,buffer,BUF-1, 0);
+        size = recv(clientSocket,buffer,MAXMSG-1, 0);
         if (size>0)
         {
             buffer[size]= '\0';
@@ -98,7 +98,7 @@ int main (int argc, char **argv) {
                 std::fill(buffer, buffer + sizeof(buffer), 0);
 
                 // Read message from stdin and send to server
-                char *fgetret = std::fgets(buffer, BUF, stdin);
+                char *fgetret = std::fgets(buffer, MAXMSG, stdin);
                 if (fgetret != nullptr) {
                     send(clientSocket, buffer, strlen(buffer), 0);
                 }
@@ -131,10 +131,10 @@ void showInput(bool show){
 
 void sendAttachment(int clientSocket){
     // Read filename
-    auto buffer = new char[BUF];
-    char *fgetret = std::fgets(buffer, BUF, stdin);
+    auto buffer = new char[MAXMSG];
+    char *fgetret = std::fgets(buffer, MAXMSG, stdin);
     if (fgetret != nullptr) {
-        auto filename = new char[BUF];
+        auto filename = new char[MAXMSG];
         strcpy(filename, buffer);
         std::string filename_str = filename;
         filename_str.erase(filename_str.length()-1);
@@ -167,7 +167,7 @@ void sendAttachment(int clientSocket){
         send(clientSocket, filename_str.c_str(), strlen(filename_str.c_str()), 0);
         // Receive OK from server
         std::fill(buffer, buffer + sizeof(buffer), 0);
-        recv(clientSocket, buffer, BUF, 0);
+        recv(clientSocket, buffer, MAXMSG, 0);
 
         // Send size as char array
         send(clientSocket, filesizestream.str().c_str(), strlen(filesizestream.str().c_str()), 0);
@@ -183,11 +183,11 @@ void sendAttachment(int clientSocket){
         do {
             // Receive OK from server
             std::fill(buffer, buffer + sizeof(buffer), 0);
-            recv(clientSocket, buffer, BUF, 0);
-            if(fsize-read_size > BUF-1){
-                file.read(buffer, BUF-1);
-                send(clientSocket, buffer, BUF-1, 0);
-                read_size += BUF-1;
+            recv(clientSocket, buffer, MAXMSG, 0);
+            if(fsize-read_size > MAXMSG-1){
+                file.read(buffer, MAXMSG-1);
+                send(clientSocket, buffer, MAXMSG-1, 0);
+                read_size += MAXMSG-1;
             }else{
                 file.read(buffer, fsize-read_size);
                 send(clientSocket, buffer, fsize-read_size, 0);
@@ -207,13 +207,13 @@ void recvAttachment(int clientSocket){
     // Send OK to server
     send(clientSocket, "OK", strlen("OK"), 0);
 
-    auto buffer = new char[BUF];
-    auto filename = new char[BUF];
+    auto buffer = new char[MAXMSG];
+    auto filename = new char[MAXMSG];
     std::fill(buffer, buffer + sizeof(buffer), 0);
     std::fill(filename, filename + sizeof(filename), 0);
 
     // Receive filename from server
-    size_t size = recv(clientSocket, filename, BUF, 0);
+    size_t size = recv(clientSocket, filename, MAXMSG, 0);
     if(size>0){
         filename[size]= '\0';
     }else{
@@ -227,7 +227,7 @@ void recvAttachment(int clientSocket){
     send(clientSocket, "OK", strlen("OK"), 0);
 
     // Receive filesize from server
-    size = recv(clientSocket, buffer, BUF, 0);
+    size = recv(clientSocket, buffer, MAXMSG, 0);
     if(size>0){
         buffer[size]= '\0';
     }else{
@@ -257,7 +257,7 @@ void recvAttachment(int clientSocket){
     attachFile.open(filepath.str().c_str(), std::ios::binary);
     if(attachFile.is_open()){
         // Receive from server and write to file
-        auto readBuffer = new char[BUF];
+        auto readBuffer = new char[MAXMSG];
         long read_size = 0;
         do{
             // Send OK to server
@@ -265,10 +265,10 @@ void recvAttachment(int clientSocket){
             std::fill(readBuffer, readBuffer + sizeof(readBuffer), 0);
 
             // Receive from server and write to file
-            if(filesize-read_size > BUF-1){
-                recv(clientSocket, readBuffer, BUF-1, 0);
-                attachFile.write(readBuffer, BUF-1);
-                read_size += BUF-1;
+            if(filesize-read_size > MAXMSG-1){
+                recv(clientSocket, readBuffer, MAXMSG-1, 0);
+                attachFile.write(readBuffer, MAXMSG-1);
+                read_size += MAXMSG-1;
             }else{
                 recv(clientSocket, readBuffer, filesize-read_size, 0);
                 attachFile.write(readBuffer, filesize-read_size);

@@ -12,7 +12,6 @@
 #include "client_handler.h"
 
 
-
 class Operation {
 protected:
     char buffer[MAXLINE];

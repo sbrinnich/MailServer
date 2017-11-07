@@ -106,12 +106,12 @@ void Server::listenForClients() {
 
     // Set timeout to 5 seconds
     struct timeval timeout;
-    timeout.tv_sec = 5;
+    timeout.tv_sec = TIMEOUT_SECONDS;
     timeout.tv_usec = 0;
 
 
     // Listen for up to 5 clients
-    listen(server_socket, 5);
+    listen(server_socket, MAX_CLIENTS);
 
     addrlen = sizeof (struct sockaddr_in);
 
@@ -140,7 +140,7 @@ void Server::listenForClients() {
 
 void Server::readBlockedClients() {
     std::stringstream filepath;
-    filepath << mailspooldir << "/blacklist.txt";
+    filepath << mailspooldir << "/" << BLACKLIST_FILENAME;
 
     std::string ip;
     time_t blockingtime;
@@ -167,7 +167,7 @@ void Server::writeBlockedClients() {
 
     // Write from map into file
     std::stringstream filepath;
-    filepath << mailspooldir << "/blacklist.txt";
+    filepath << mailspooldir << "/" << BLACKLIST_FILENAME;
 
     std::ofstream file;
 
@@ -227,7 +227,7 @@ void Server::blockClient(int clientSocket) {
 
     // Write client to file
     std::stringstream filepath;
-    filepath << mailspooldir << "/blacklist.txt";
+    filepath << mailspooldir << "/" << BLACKLIST_FILENAME;
 
     std::ofstream file;
 

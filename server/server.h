@@ -1,9 +1,6 @@
 #ifndef MAILSERVER_SERVER_H
 #define MAILSERVER_SERVER_H
 
-// Minutes until blocked clients are able to connect again
-#define IP_BLOCK_MINUTES 2
-
 #include <cstdio>
 #include <cstring>
 #include <unordered_map>
@@ -98,7 +95,7 @@ public:
      */
     int bindSocket();
     /**
-     * Listens in a loop for up to 5 clients connecting to this server and calls clientConnect in a new thread
+     * Listens in a loop for up to a few clients connecting to this server and calls clientConnect in a new thread
      * for each client connecting
      */
     void listenForClients();
