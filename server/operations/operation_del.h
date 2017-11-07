@@ -16,7 +16,7 @@ public:
      * @param clientHandler an instance to the ClientHandler handling this client's requests
      */
     OperationDel(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
-    ~OperationDel();
+    ~OperationDel() override = default;
     int doPreparation() override;
     int parseRequest() override;
     int doOperation() override;

@@ -32,8 +32,8 @@ int OperationLogin::parseRequest() {
 }
 
 int OperationLogin::doOperation() {
-    if(username == NULL || strcmp(username, "") == 0 ||
-            password == NULL || strcmp(password, "") == 0){
+    if(username == nullptr || strcmp(username, "") == 0 ||
+            password == nullptr || strcmp(password, "") == 0){
         return 1;
     }
 
@@ -46,17 +46,17 @@ int OperationLogin::doOperation() {
 
     attribs[0]=strdup("uid");
     attribs[1]=strdup("cn");
-    attribs[2]=NULL;
+    attribs[2]= nullptr;
 
 
     // setup LDAP connection
-    if ((ld=ldap_init(LDAP_HOST, LDAP_PORT)) == NULL){
+    if ((ld=ldap_init(LDAP_HOST, LDAP_PORT)) == nullptr){
         perror("ldap_init failed");
         return 1;
     }
 
     // anonymous bind
-    rc = ldap_simple_bind_s(ld,NULL,NULL);
+    rc = ldap_simple_bind_s(ld, nullptr, nullptr);
 
     if (rc != LDAP_SUCCESS){
         fprintf(stderr,"LDAP error: %s\n",ldap_err2string(rc));

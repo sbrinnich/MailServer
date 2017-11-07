@@ -28,7 +28,7 @@ int main (int argc, char** argv) {
     directory = argv[2];
 
     // Create server
-    Server *server = new Server(directory, port);
+    auto server = new Server(directory, port);
     int stat = server->startServer();
 
     delete server;

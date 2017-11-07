@@ -69,6 +69,3 @@ int OperationDel::doOperation() {
         return 1;
     }
 }
-
-OperationDel::~OperationDel() {
-}

@@ -27,7 +27,7 @@ public:
      * @param clientHandler an instance to the ClientHandler handling this client's requests
      */
     OperationSend(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
-    ~OperationSend();
+    ~OperationSend() override;
     int doPreparation() override;
     int parseRequest() override;
     int doOperation() override;

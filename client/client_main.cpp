@@ -8,7 +8,6 @@
 #include <cstring>
 #include <sstream>
 #include <termios.h>
-#include <sys/stat.h>
 #include <fstream>
 #include <iostream>
 
@@ -132,10 +131,10 @@ void showInput(bool show){
 
 void sendAttachment(int clientSocket){
     // Read filename
-    char* buffer = new char[BUF];
+    auto buffer = new char[BUF];
     char *fgetret = std::fgets(buffer, BUF, stdin);
     if (fgetret != nullptr) {
-        char* filename = new char[BUF];
+        auto filename = new char[BUF];
         strcpy(filename, buffer);
         std::string filename_str = filename;
         filename_str.erase(filename_str.length()-1);
@@ -161,7 +160,7 @@ void sendAttachment(int clientSocket){
         filesizestream << fsize;
 
         // Remove path from input
-        std::size_t found = filename_str.find_last_of("/");
+        std::size_t found = filename_str.find_last_of('/');
         filename_str = filename_str.substr(found+1);
 
         // Send filename
@@ -208,8 +207,8 @@ void recvAttachment(int clientSocket){
     // Send OK to server
     send(clientSocket, "OK", strlen("OK"), 0);
 
-    char *buffer = new char[BUF];
-    char *filename = new char[BUF];
+    auto buffer = new char[BUF];
+    auto filename = new char[BUF];
     std::fill(buffer, buffer + sizeof(buffer), 0);
     std::fill(filename, filename + sizeof(filename), 0);
 
@@ -258,7 +257,7 @@ void recvAttachment(int clientSocket){
     attachFile.open(filepath.str().c_str(), std::ios::binary);
     if(attachFile.is_open()){
         // Receive from server and write to file
-        char* readBuffer = new char[BUF];
+        auto readBuffer = new char[BUF];
         long read_size = 0;
         do{
             // Send OK to server

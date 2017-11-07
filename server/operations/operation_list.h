@@ -12,7 +12,7 @@ public:
      * @param clientHandler an instance to the ClientHandler handling this client's requests
      */
     OperationList(int clientsocket, char* mailspooldir, ClientHandler* clientHandler);
-    ~OperationList();
+    ~OperationList() override = default;
     int doPreparation() override;
     int parseRequest() override;
     int doOperation() override;

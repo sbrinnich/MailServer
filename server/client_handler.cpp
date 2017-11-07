@@ -1,7 +1,6 @@
 #include <strings.h>
 #include <cstring>
 #include <sys/socket.h>
-#include <unistd.h>
 
 #include "client_handler.h"
 #include "operation.h"
@@ -33,7 +32,7 @@ int ClientHandler::handleClient(int clientsocket) {
     char buffer[MAXLINE];
     int status = -1;
     char msg[MAXLINE];
-    while(1) {
+    while(true) {
         // Check if login counter is too high
         if(getFailedLogins() >= 3) {
             return 1;

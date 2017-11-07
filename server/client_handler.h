@@ -42,7 +42,7 @@ public:
      * Creates an instance of a client handler class
      * @param mailspooldir a path to the mails pool directory
      */
-    ClientHandler(char* mailspooldir);
+    explicit ClientHandler(char* mailspooldir);
 
     /**
      * Handles a client's requests

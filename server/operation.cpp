@@ -107,7 +107,7 @@ char* Operation::getNthMailFilename(const char *filepath, int n) {
     }
     struct dirent *ent;
     int count = 0;
-    while ((ent = readdir(dir)) != NULL) {
+    while ((ent = readdir(dir)) != nullptr) {
         if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0
                 && std::string(ent->d_name).find("_attach") == std::string::npos) {
             count++;
@@ -118,5 +118,3 @@ char* Operation::getNthMailFilename(const char *filepath, int n) {
     }
     return nullptr;
 }
-
-Operation::~Operation() {}

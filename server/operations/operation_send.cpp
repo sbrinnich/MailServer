@@ -62,18 +62,14 @@ int OperationSend::parseRequest() {
     cnt_stream.str().copy(content, len, 0);
     content[len] = '\0';
 
-    char* attachment = new char [8];
+    auto attachment = new char [8];
     send(clientsocket, "Add file attachment?(y/n) ", strlen("Add file attachment?(y/n) "), 0);
     ret = getClientInput(8, &attachment);
     if(ret == 1 || ret == -1){
         delete [] attachment;
         return ret;
     }
-    if(strcmp(attachment, "y") == 0){
-        fileattached = true;
-    }else{
-        fileattached = false;
-    }
+    fileattached = strcmp(attachment, "y") == 0;
 
     delete [] attachment;
     return 0;
@@ -83,7 +79,7 @@ int OperationSend::parseRequest() {
 int OperationSend::sendFileAttachment(std::string filename) {
     send(clientsocket, "Which file do you want to add? ", strlen("Which file do you want to add? "), 0);
 
-    char* localfile = new char[MAXLINE];
+    auto localfile = new char[MAXLINE];
     int ret = getClientInput(MAXLINE, &localfile);
     if (ret == 1 || ret == -1) {
         delete[] localfile;
@@ -95,7 +91,7 @@ int OperationSend::sendFileAttachment(std::string filename) {
 
 
     // Get filesize from client
-    char* FileSizeChar = new char[MAXLINE];
+    auto FileSizeChar = new char[MAXLINE];
     ret = getClientInput(MAXLINE, &FileSizeChar);
     if (ret == 1 || ret == -1) {
         delete[] FileSizeChar;
@@ -145,7 +141,7 @@ int OperationSend::sendFileAttachment(std::string filename) {
         return 1;
     }
 
-    char* readBuffer = new char[MAXMSG];
+    auto readBuffer = new char[MAXMSG];
     long read_size = 0;
     do{
         // Send OK to client
@@ -174,15 +170,15 @@ int OperationSend::sendFileAttachment(std::string filename) {
 int OperationSend::doOperation() {
 
     // Check if all parameters are set
-    if(receiver == NULL || strcmp(receiver, "") == 0 ||
-            subject == NULL || strcmp(subject, "") == 0 ||
-            content == NULL || strcmp(content, "") == 0){
+    if(receiver == nullptr || strcmp(receiver, "") == 0 ||
+            subject == nullptr || strcmp(subject, "") == 0 ||
+            content == nullptr || strcmp(content, "") == 0){
         return 1;
     }
 
     // Create filename
     struct timeval tp;
-    gettimeofday(&tp, NULL);
+    gettimeofday(&tp, nullptr);
     long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
     std::stringstream filename;
     filename << std::to_string(ms) << "_" << std::this_thread::get_id();

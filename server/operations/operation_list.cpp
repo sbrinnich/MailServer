@@ -32,7 +32,7 @@ int OperationList::doOperation() {
         subject = new char[81];
         content = new char[MAXMSG];
         int parsing;
-        while((ent = readdir(dir)) != NULL){
+        while((ent = readdir(dir)) != nullptr){
             if(strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0
                     && std::string(ent->d_name).find("_attach") == std::string::npos) {
                 std::stringstream filepath;
@@ -58,12 +58,9 @@ int OperationList::doOperation() {
     send(clientsocket, out.str().c_str(), strlen(out.str().c_str()), 0);
 
     // Receive OK from client
-    char* buf = new char[10];
+    auto buf = new char[10];
     recv(clientsocket, buf, 10, 0);
     delete[] buf;
 
     return 0;
-}
-
-OperationList::~OperationList() {
 }

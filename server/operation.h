@@ -81,7 +81,7 @@ public:
      */
     virtual int doOperation() = 0;
 
-    virtual ~Operation();
+    virtual ~Operation() = default;
 };
 
 #endif //MAILSERVER_OPERATION_H

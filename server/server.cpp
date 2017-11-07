@@ -8,7 +8,7 @@ void Server::clientConnect(int clientSocket){
         // Check if client is blocked
         auto it = blocked_clients.find(getIpFromSocket(clientSocket));
         if (it != blocked_clients.end()) {
-            if (it->second > time(0)) {
+            if (it->second > time(nullptr)) {
                 printf("Blocked client tried to connect.\n");
                 send(clientSocket, "Your IP is blocked for a limited time!\n",
                      strlen("Your IP is blocked for a limited time!\n"), 0);
@@ -21,7 +21,7 @@ void Server::clientConnect(int clientSocket){
         }
     } // Release lock
 
-    ClientHandler* clientHandler = new ClientHandler(mailspooldir);
+    auto clientHandler = new ClientHandler(mailspooldir);
     int status = clientHandler->handleClient(clientSocket);
     switch(status){
         case 1:
@@ -59,7 +59,7 @@ int Server::checkDir() {
     if(!dir){
         // Ask if directory should be created
         printf("Directory does not exist! Do you want to create it? (y/n) ");
-        char *buffer = new char[MAXLINE];
+        auto buffer = new char[MAXLINE];
         char *fgetret = std::fgets(buffer, MAXLINE, stdin);
         if (fgetret != nullptr && strcmp(buffer, "y\n") == 0) {
             delete[] buffer;
@@ -123,7 +123,7 @@ void Server::listenForClients() {
         FD_SET(server_socket, &fds);
 
         // Wait for clients to connect to server (timeout after 5 seconds)
-        if(select(server_socket+1, &fds, (fd_set *) 0, (fd_set *) 0, &timeout) > 0){
+        if(select(server_socket+1, &fds, (fd_set *) nullptr, (fd_set *) nullptr, &timeout) > 0){
             // New client connected
             client_socket = accept(server_socket, (struct sockaddr *) &cliaddress, &addrlen);
             printf("Client connected from %s:%d...\n", inet_ntoa (cliaddress.sin_addr),ntohs(cliaddress.sin_port));
@@ -152,7 +152,7 @@ void Server::readBlockedClients() {
     file.open(filepath.str(), std::ios::in);
     if(file.is_open()){
         while(file >> ip >> blockingtime){
-            if(blockingtime > time(0)){
+            if(blockingtime > time(nullptr)){
                 blocked_clients[ip] = blockingtime;
             }
         }
@@ -176,8 +176,8 @@ void Server::writeBlockedClients() {
 
     file.open(filepath.str(), std::ios::out | std::ios::trunc);
     if(file.is_open()){
-        for(auto it = blocked_clients.begin(); it != blocked_clients.end(); it++){
-            file << it->first << " " << it->second << std::endl;
+        for(auto &blocked_client : blocked_clients) {
+            file << blocked_client.first << " " << blocked_client.second << std::endl;
         }
         printf("Write complete! Blacklist now up-to-date!\n");
     }else{
@@ -190,7 +190,7 @@ void Server::checkBlockedClients() {
     // Lock map
     std::lock_guard<std::mutex> lock(blacklist_map_mutex);
     for(auto it = blocked_clients.begin(); it != blocked_clients.end(); it++){
-        if(it->second <= time(0)){
+        if(it->second <= time(nullptr)){
             // Time expired, remove client from list
             blocked_clients.erase(it->first);
         }
@@ -217,7 +217,7 @@ void Server::blockClient(int clientSocket) {
     }
 
     // Get time for when client is not blocked again
-    time_t until = time(0)+IP_BLOCK_MINUTES*60;
+    time_t until = time(nullptr)+IP_BLOCK_MINUTES*60;
 
     // Write client to list
     {
