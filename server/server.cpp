@@ -268,9 +268,10 @@ int Server::startServer() {
         std::fill(buffer, buffer + sizeof(buffer), 0);
         char *fgetret = std::fgets(buffer, MAXLINE, stdin);
         if (fgetret != nullptr) {
-            if(strcasecmp(buffer, "write\n") == 0){
+            buffer[strlen(buffer)-1] = '\0';
+            if(strcasecmp(buffer, SVR_COMMAND_WRITE) == 0){
                 writeBlockedClients();
-            }else if(strcasecmp(buffer, "quit\n") == 0){
+            }else if(strcasecmp(buffer, SVR_COMMAND_QUIT) == 0){
                 listening = false;
             }
         }

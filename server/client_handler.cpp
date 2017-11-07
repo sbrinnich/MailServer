@@ -14,15 +14,16 @@ ClientHandler::ClientHandler(char *mailspooldir) :
         mailspooldir(mailspooldir), username(nullptr), failedLogins(0) {}
 
 Operation* ClientHandler::getOperation(char* buffer, int clientsocket) {
-    if(strcasecmp(buffer, "LOGIN\n") == 0){
+    buffer[strlen(buffer)-1] = '\0';
+    if(strcasecmp(buffer, OPERATION_LOGIN) == 0){
         return new OperationLogin(clientsocket, mailspooldir, this);
-    }else if(strcasecmp(buffer, "SEND\n") == 0){
+    }else if(strcasecmp(buffer, OPERATION_SEND) == 0){
         return new OperationSend(clientsocket, mailspooldir, this);
-    }else if(strcasecmp(buffer, "LIST\n") == 0){
+    }else if(strcasecmp(buffer, OPERATION_LIST) == 0){
         return new OperationList(clientsocket, mailspooldir, this);
-    }else if(strcasecmp(buffer, "READ\n") == 0){
+    }else if(strcasecmp(buffer, OPERATION_READ) == 0){
         return new OperationRead(clientsocket, mailspooldir, this);
-    }else if(strcasecmp(buffer, "DEL\n") == 0){
+    }else if(strcasecmp(buffer, OPERATION_DELETE) == 0){
         return new OperationDel(clientsocket, mailspooldir, this);
     }
     return nullptr;
@@ -39,17 +40,19 @@ int ClientHandler::handleClient(int clientsocket) {
         }
 
         // Display message to client
+        std::stringstream out_message;
         switch(status){
             case 0:
-                strcpy(msg, "OK\n\nWhat do you want to do?\n");
+                out_message << "OK\n\n";
                 break;
             case 1:
-                strcpy(msg, "ERR\n\nWhat do you want to do?\n");
+                out_message << "ERR\n\n";
                 break;
             default:
-                strcpy(msg, "What do you want to do?\n");
                 break;
         }
+        out_message << INFO_TEXT;
+        strcpy(msg, out_message.str().c_str());
         send(clientsocket, msg, strlen(msg), 0);
 
         // Get Operation from first input line of client
@@ -63,7 +66,9 @@ int ClientHandler::handleClient(int clientsocket) {
         }else {
             buffer[size] = '\0';
 
-            if (strcasecmp(buffer, "QUIT\n") == 0) {
+            std::stringstream quit;
+            quit << OPERATION_QUIT << "\n";
+            if (strcasecmp(buffer, quit.str().c_str()) == 0) {
                 return 0;
             } else {
                 status = handleClientRequest(clientsocket, buffer);

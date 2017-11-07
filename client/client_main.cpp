@@ -63,6 +63,10 @@ int main (int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    // Quit command
+    std::stringstream quit;
+    quit << OPERATION_QUIT << "\n";
+
     // Loop send and receive
     do {
         // Clear buffer
@@ -109,7 +113,7 @@ int main (int argc, char **argv) {
                 }
             }
         }
-    }while (strcasecmp (buffer, "quit\n") != 0);
+    }while (strcasecmp(buffer, quit.str().c_str()) != 0);
 
     // Close connection
     printf ("Connection to server closed.\n");
